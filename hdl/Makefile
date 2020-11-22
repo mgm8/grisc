@@ -12,6 +12,13 @@ rom:
 	$(GHDL) -e -fsynopsys --std=08 TB_ROM
 	$(GHDL) -r TB_ROM $(FLAGS) --vcd=tb_rom.vcd
 
+counter:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a counter.vhd
+	$(GHDL) -a tb_counter.vhd
+	$(GHDL) -e TB_Counter
+	$(GHDL) -r TB_Counter $(FLAGS) --vcd=tb_counter.vcd
+
 clean:
 	$(GHDL) --clean
-	rm *.cf
+	rm *.cf *.o
