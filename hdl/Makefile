@@ -26,6 +26,13 @@ regfile:
 	$(GHDL) -e TB_RegFile
 	$(GHDL) -r TB_RegFile $(FLAGS) --vcd=tb_regfile.vcd
 
+ram:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a ram.vhd
+	$(GHDL) -a tb_ram.vhd
+	$(GHDL) -e TB_RAM
+	$(GHDL) -r TB_RAM $(FLAGS) --vcd=tb_ram.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
