@@ -19,6 +19,13 @@ counter:
 	$(GHDL) -e TB_Counter
 	$(GHDL) -r TB_Counter $(FLAGS) --vcd=tb_counter.vcd
 
+regfile:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a regfile.vhd
+	$(GHDL) -a tb_regfile.vhd
+	$(GHDL) -e TB_RegFile
+	$(GHDL) -r TB_RegFile $(FLAGS) --vcd=tb_regfile.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
