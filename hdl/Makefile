@@ -54,6 +54,13 @@ adder:
 	$(GHDL) -e -fsynopsys TB_Adder
 	$(GHDL) -r TB_Adder $(FLAGS) --vcd=tb_adder.vcd
 
+immgen:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a -fsynopsys immgen.vhd
+	$(GHDL) -a -fsynopsys tb_immgen.vhd
+	$(GHDL) -e -fsynopsys TB_ImmGen
+	$(GHDL) -r TB_ImmGen --stop-time=100ns --vcd=tb_immgen.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
