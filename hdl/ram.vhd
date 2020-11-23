@@ -3,7 +3,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.9
+--! \version 0.0.12
 --! 
 --! \date 2020/11/21
 --! 
@@ -21,6 +21,7 @@ entity RAM is
     port(
         clk         : in std_logic;                                 --! Clock input.
         wr_en       : in std_logic;                                 --! Write enable.
+        rd_en       : in std_logic;                                 --! Read enable.
         adr         : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Memory address to access.
         data_in     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
         data_out    : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
@@ -42,7 +43,9 @@ begin
                 ram_mem(to_integer(unsigned(adr))) <= data_in;
             end if;
 
-            data_out <= ram_mem(to_integer(unsigned(adr)));
+            if rd_en = '1' then
+                data_out <= ram_mem(to_integer(unsigned(adr)));
+            end if;
         end if;
     end process;
 
