@@ -33,6 +33,20 @@ ram:
 	$(GHDL) -e TB_RAM
 	$(GHDL) -r TB_RAM $(FLAGS) --vcd=tb_ram.vcd
 
+mux:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a mux2x1.vhd
+	$(GHDL) -a tb_mux.vhd
+	$(GHDL) -e TB_Mux
+	$(GHDL) -r TB_Mux $(FLAGS) --vcd=tb_mux.vcd
+
+alu:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a -fsynopsys alu.vhd
+	$(GHDL) -a -fsynopsys tb_alu.vhd
+	$(GHDL) -e -fsynopsys TB_ALU
+	$(GHDL) -r TB_ALU $(FLAGS) --vcd=tb_alu.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
