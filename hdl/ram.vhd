@@ -3,7 +3,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.4
+--! \version 0.0.9
 --! 
 --! \date 2020/11/21
 --! 
@@ -15,12 +15,13 @@ library ieee;
 entity RAM is
     generic(
         DATA_WIDTH  : natural := 32;                                --! Data width in bits.
+        ADR_WIDTH   : natural := 32;                                --! Address width in bits.
         SIZE        : natural := 1024                               --! Memory size in bytes.
     );
     port(
         clk         : in std_logic;                                 --! Clock input.
         wr_en       : in std_logic;                                 --! Write enable.
-        adr         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Memory address to access.
+        adr         : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Memory address to access.
         data_in     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
         data_out    : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
     );

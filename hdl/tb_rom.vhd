@@ -3,7 +3,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.1
+--! \version 0.0.9
 --! 
 --! \date 2020/11/21
 --! 
@@ -26,12 +26,13 @@ architecture behavior of TB_ROM is
     component ROM
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.
+            ADR_WIDTH   : natural := 64;                                --! Address width in bits.
             SIZE        : natural := 1024;                              --! Memory size in bytes.
             MEM_FILE    : string := "rom.hex"                           --! File name of the memory file.
         );
         port(
             clk         : in std_logic;                                 --! Clock source.
-            adr         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Memory address.
+            adr         : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Memory address.
             data_out    : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
         );
     end component;
@@ -48,6 +49,7 @@ begin
 
     dut : ROM       generic map(
                         DATA_WIDTH  => 32,
+                        ADR_WIDTH   => 32,
                         SIZE        => 16,
                         MEM_FILE    => "tb_rom.hex"
                         )
