@@ -47,6 +47,13 @@ alu:
 	$(GHDL) -e -fsynopsys TB_ALU
 	$(GHDL) -r TB_ALU $(FLAGS) --vcd=tb_alu.vcd
 
+adder:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a -fsynopsys adder.vhd
+	$(GHDL) -a -fsynopsys tb_adder.vhd
+	$(GHDL) -e -fsynopsys TB_Adder
+	$(GHDL) -r TB_Adder $(FLAGS) --vcd=tb_adder.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
