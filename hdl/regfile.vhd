@@ -3,7 +3,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.3
+--! \version 0.0.7
 --! 
 --! \date 2020/11/22
 --! 
@@ -19,9 +19,10 @@ entity RegFile is
     );
     port(
         clk         : in std_logic;                                 --! Clock input.
-        inst        : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction.
+        rs1         : in std_logic_vector(4 downto 0);              --! First source register number.
+        rs2         : in std_logic_vector(4 downto 0);              --! Second source register number.
+        rd          : in std_logic_vector(4 downto 0);              --! Destination register number.
         wr_en       : in std_logic;                                 --! Write register enable.
-        reg_write   : in std_logic_vector(4 downto 0);              --! Register number to write.
         data_write  : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data to write into register.
         op1         : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
         op2         : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operand 2.
@@ -39,12 +40,12 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
-            op1 <= reg_bank(to_integer(unsigned(inst(19 downto 15))));
-            op2 <= reg_bank(to_integer(unsigned(inst(24 downto 20))));
+            op1 <= reg_bank(to_integer(unsigned(rs1)));
+            op2 <= reg_bank(to_integer(unsigned(rs2)));
 
             if wr_en = '1' then
-                if to_integer(unsigned(reg_write)) /= 0 then    -- 0 = x0 = The constant zero register
-                    reg_bank(to_integer(unsigned(reg_write))) <= data_write;
+                if to_integer(unsigned(rd)) /= 0 then   -- 0 = x0 = The constant zero register
+                    reg_bank(to_integer(unsigned(rd))) <= data_write;
                 end if;
             end if;
         end if;

@@ -3,7 +3,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.3
+--! \version 0.0.7
 --! 
 --! \date 2020/11/22
 --! 
@@ -29,9 +29,10 @@ architecture behavior of TB_RegFile is
         );
         port(
             clk         : in std_logic;                                 --! Clock input.
-            inst        : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction.
+            rs1         : in std_logic_vector(4 downto 0);              --! First source register number.
+            rs2         : in std_logic_vector(4 downto 0);              --! Second source register number.
+            rd          : in std_logic_vector(4 downto 0);              --! Destination register number.
             wr_en       : in std_logic;                                 --! Write register enable.
-            reg_write   : in std_logic_vector(4 downto 0);              --! Register number to write.
             data_write  : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data to write into register.
             op1         : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
             op2         : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operand 2.
@@ -41,7 +42,9 @@ architecture behavior of TB_RegFile is
     constant DATA_WIDTH     : natural := 32;
 
     signal clk_sig          : std_logic := '0';
-    signal inst_sig         : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+    signal rs1_sig          : std_logic_vector(4 downto 0) := (others => '0');
+    signal rs2_sig          : std_logic_vector(4 downto 0) := (others => '0');
+    signal rd_sig           : std_logic_vector(4 downto 0) := (others => '0');
     signal wr_en_sig        : std_logic := '0';
     signal reg_write_sig    : std_logic_vector(4 downto 0) := (others => '0');
     signal data_write_sig   : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
@@ -60,9 +63,10 @@ begin
                         )
                     port map(
                         clk             => clk_sig,
-                        inst            => inst_sig,
+                        rs1             => rs1_sig,
+                        rs2             => rs2_sig,
+                        rd              => rd_sig,
                         wr_en           => wr_en_sig,
-                        reg_write       => reg_write_sig,
                         data_write      => data_write_sig,
                         op1             => op1_sig,
                         op2             => op2_sig
@@ -72,18 +76,19 @@ begin
     begin
         wr_en_sig <= '1';
 
-        reg_write_sig <= "00101";
+        rd_sig <= "00101";
         data_write_sig <= x"00000001";  -- Writes 0x01 to register 5
         wait for 30 ns;
 
-        reg_write_sig <= "00111";
+        rd_sig <= "00111";
         data_write_sig <= x"00000002";  -- Writes 0x02 to register 7
         wait for 30 ns;
 
         wr_en_sig <= '0';
         wait for 30 ns;
 
-        inst_sig <= x"00728000";        -- rs1 = 0x05, rs2 = 0x07
+        rs1_sig <= "00101";
+        rs2_sig <= "00111";
         wait for 30 ns;
 
         if op1_sig /= x"00000001" then
