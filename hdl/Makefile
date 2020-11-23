@@ -47,6 +47,13 @@ alu:
 	$(GHDL) -e -fsynopsys TB_ALU
 	$(GHDL) -r TB_ALU $(FLAGS) --vcd=tb_alu.vcd
 
+aluctrl:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a -fsynopsys aluctrl.vhd
+	$(GHDL) -a -fsynopsys tb_aluctrl.vhd
+	$(GHDL) -e -fsynopsys TB_ALUCtrl
+	$(GHDL) -r TB_ALUCtrl $(FLAGS) --vcd=tb_aluctrl.vcd
+
 adder:
 	$(GHDL) -a clock.vhd
 	$(GHDL) -a -fsynopsys adder.vhd

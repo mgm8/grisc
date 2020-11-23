@@ -3,7 +3,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.6
+--! \version 0.0.14
 --! 
 --! \date 2020/11/22
 --! 
@@ -28,10 +28,11 @@ end ALU;
 
 architecture behavior of ALU is
 
-    constant ALU_OP_ID_ADD : std_logic_vector(operation'range) := "0000";   --! ADD operation.
-    constant ALU_OP_ID_AND : std_logic_vector(operation'range) := "0001";   --! AND operation.
-    constant ALU_OP_ID_OR  : std_logic_vector(operation'range) := "0010";   --! OR operation.
+    constant ALU_OP_ID_AND : std_logic_vector(operation'range) := "0000";   --! AND operation.
+    constant ALU_OP_ID_OR  : std_logic_vector(operation'range) := "0001";   --! OR operation.
+    constant ALU_OP_ID_ADD : std_logic_vector(operation'range) := "0010";   --! ADD operation.
     constant ALU_OP_ID_XOR : std_logic_vector(operation'range) := "0011";   --! XOR operation.
+    constant ALU_OP_ID_SUB : std_logic_vector(operation'range) := "0110";   --! SUB operation.
 
     signal result_sig : std_logic_vector(result'range) := (others => '0');
 
@@ -50,10 +51,11 @@ begin
     begin
         if rising_edge(clk) then
             case operation is
-                when ALU_OP_ID_ADD => result_sig <= op1 + op2;
                 when ALU_OP_ID_AND => result_sig <= op1 and op2;
                 when ALU_OP_ID_OR  => result_sig <= op1 or op2;
+                when ALU_OP_ID_ADD => result_sig <= op1 + op2;
                 when ALU_OP_ID_XOR => result_sig <= op1 xor op2;
+                when ALU_OP_ID_SUB => result_sig <= op1 - op2;
                 when others => result_sig <= (others => '0');
             end case;
         end if;
