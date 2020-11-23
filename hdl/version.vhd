@@ -3,14 +3,14 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.7
+--! \version 0.0.8
 --! 
 --! \date 2020/11/21
 --! 
 
 package version is
 
-    constant GRISC_VERSION  : string := "0.0.7";
+    constant GRISC_VERSION  : string := "0.0.8";
 
     constant GRISC_AUTHOR   : string := "Gabriel Mariano Marcelino";
     constant GRISC_EMAIL    : string := "gabriel.mm8@gmail.com";
