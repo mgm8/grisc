@@ -1,9 +1,32 @@
+--
+-- tb_alu.vhd
+--
+-- Copyright (C) 2020, Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
+--
+-- SPDX-License-Identifier: Apache-2.0 WITH SHL-2.1
+--
+-- Licensed under the Solderpad Hardware License v 2.1 (the "License");
+-- you may not use this file except in compliance with the License,
+-- or, at your option, the Apache License version 2.0.
+--
+-- You may obtain a copy of the License at
+--
+-- https://solderpad.org/licenses/SHL-2.1/
+--
+-- Unless required by applicable law or agreed to in writing, any
+-- work distributed under the License is distributed on an "AS IS"
+-- BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+-- express or implied. See the License for the specific language
+-- governing permissions and limitations under the License.
+--
+--
+
 --! 
 --! \brief Aritmetic Logic Unit testbench.
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.6
+--! \version 0.0.15
 --! 
 --! \date 2020/11/22
 --! 
@@ -38,6 +61,12 @@ architecture behavior of TB_ALU is
 
     constant DATA_WIDTH     : natural := 32;
 
+    constant ALU_OP_ID_AND : std_logic_vector(3 downto 0) := "0000";    --! AND operation.
+    constant ALU_OP_ID_OR  : std_logic_vector(3 downto 0) := "0001";    --! OR operation.
+    constant ALU_OP_ID_ADD : std_logic_vector(3 downto 0) := "0010";    --! ADD operation.
+    constant ALU_OP_ID_XOR : std_logic_vector(3 downto 0) := "0011";    --! XOR operation.
+    constant ALU_OP_ID_SUB : std_logic_vector(3 downto 0) := "0110";    --! SUB operation.
+
     signal clk_sig          : std_logic := '0';
     signal op1_sig          : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
     signal op2_sig          : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
@@ -68,7 +97,7 @@ begin
         -- ADD test
         op1_sig <= x"00000002";
         op2_sig <= x"00000001";
-        operation_sig <= "0000";
+        operation_sig <= ALU_OP_ID_ADD;
         wait for 50 ns;
 
         if result_sig /= x"00000003" then
@@ -78,7 +107,7 @@ begin
         -- AND test
         op1_sig <= x"00000001";
         op2_sig <= x"00000001";
-        operation_sig <= "0001";
+        operation_sig <= ALU_OP_ID_AND;
         wait for 50 ns;
 
         if result_sig /= x"00000001" then
@@ -88,7 +117,7 @@ begin
         -- OR test
         op1_sig <= x"00000001";
         op2_sig <= x"00000004";
-        operation_sig <= "0010";
+        operation_sig <= ALU_OP_ID_OR;
         wait for 50 ns;
 
         if result_sig /= x"00000005" then
@@ -98,7 +127,7 @@ begin
         -- XOR test
         op1_sig <= x"00000021";
         op2_sig <= x"00000006";
-        operation_sig <= "0011";
+        operation_sig <= ALU_OP_ID_XOR;
         wait for 50 ns;
 
         if result_sig /= x"00000027" then
