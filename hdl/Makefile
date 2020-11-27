@@ -68,6 +68,21 @@ immgen:
 	$(GHDL) -e -fsynopsys TB_ImmGen
 	$(GHDL) -r TB_ImmGen --stop-time=100ns --vcd=tb_immgen.vcd
 
+datapath:
+	$(GHDL) -a --std=08 clock.vhd
+	$(GHDL) -a -fsynopsys --std=08 reg.vhd
+	$(GHDL) -a -fsynopsys --std=08 rom.vhd
+	$(GHDL) -a -fsynopsys --std=08 regfile.vhd
+	$(GHDL) -a -fsynopsys --std=08 ram.vhd
+	$(GHDL) -a -fsynopsys --std=08 mux2x1.vhd
+	$(GHDL) -a -fsynopsys --std=08 alu.vhd
+	$(GHDL) -a -fsynopsys --std=08 aluctrl.vhd
+	$(GHDL) -a -fsynopsys --std=08 adder.vhd
+	$(GHDL) -a -fsynopsys --std=08 immgen.vhd
+	$(GHDL) -a -fsynopsys --std=08 tb_datapath.vhd
+	$(GHDL) -e -fsynopsys --std=08 TB_Datapath
+	$(GHDL) -r TB_Datapath --stop-time=500ns --vcd=tb_datapath.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
