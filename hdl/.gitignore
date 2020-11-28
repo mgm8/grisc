@@ -1,0 +1,14 @@
+*.o
+*.cf
+*.vcd
+
+tb_rom
+tb_ram
+tb_counter
+tb_mux
+tb_alu
+tb_adder
+tb_regfile
+tb_immgen
+tb_aluctrl
+tb_datapath
