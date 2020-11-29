@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.17
+--! \version 0.0.21
 --! 
 --! \date 2020/11/28
 --! 
@@ -36,16 +36,20 @@ library ieee;
 
 entity IF_ID is
     generic(
-        DATA_WIDTH      : natural := 32;                                --! Data width in bits.
-        ADR_WIDTH       : natural := 64                                 --! Address width in bits.
+        DATA_WIDTH          : natural := 32;                                --! Data width in bits.
+        ADR_WIDTH           : natural := 64                                 --! Address width in bits.
         );
     port(
-        clk             : in std_logic;                                 --! Clock input.
-        rst             : in std_logic;                                 --! Reset signal.
-        inst_adr_in     : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Instruction address input.
-        inst_in         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction input.
-        inst_adr_out    : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! Instruction address output.
-        inst_out        : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Instruction output.
+        clk                 : in std_logic;                                 --! Clock input.
+        rst                 : in std_logic;                                 --! Reset signal.
+
+        -- EX
+        pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
+        pc_adr_out          : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! PC address output.
+
+        -- ID
+        inst_in             : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction input.
+        inst_out            : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Instruction output.
         );
 end IF_ID;
 
@@ -65,15 +69,15 @@ architecture behavior of IF_ID is
 
 begin
 
-    -- Instruction address register
-    inst_adr_reg : Reg  generic map(
+    -- PC address register
+    pc_adr_reg : Reg    generic map(
                             DATA_WIDTH  => ADR_WIDTH
                             )
                         port map(
                             clk         => clk,
                             rst         => rst,
-                            input       => inst_adr_in,
-                            output      => inst_adr_out
+                            input       => pc_adr_in,
+                            output      => pc_adr_out
                             );
 
     -- Instruction register
