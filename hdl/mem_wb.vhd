@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.18
+--! \version 0.0.19
 --! 
 --! \date 2020/11/28
 --! 
@@ -36,24 +36,24 @@ library ieee;
 
 entity MEM_WB is
     generic(
-        DATA_WIDTH          : natural := 32;                                --! Data width in bits.
-        ADR_WIDTH           : natural := 64                                 --! Address width in bits.
+        DATA_WIDTH          : natural := 32;                                        --! Data width in bits.
+        ADR_WIDTH           : natural := 64;                                        --! Address width in bits.
+        WB_MUX_SEL_WIDTH    : natural := 1;                                         --! WB mux select width in bits.
+        REGFILE_ADR_WIDTH   : natural := 5                                          --! Register file address width in bits
         );
     port(
-        clk                 : in std_logic;                                 --! Clock input.
-        rst                 : in std_logic;                                 --! Reset signal.
-        wb_sel_in           : in std_logic_vector(0 downto 0);              --! WB mux select input.
-        regfile_wr_en_in    : in std_logic;                                 --! Register file write enable input.
-        regfile_wr_adr_in   : in std_logic_vector(4 downto 0);              --! Register file write address input.
-        alu_res_in          : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! ALU result input.
-        data_mem_in         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data memory input.
-        inst_adr_in         : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Instruction address input.
-        wb_sel_out          : out std_logic_vector(0 downto 0);             --! WB mux select output.
-        regfile_wr_en_out   : out std_logic;                                --! Register file write enable output.
-        regfile_wr_adr_out  : out std_logic_vector(4 downto 0);             --! Register file write address output.
-        alu_res_out         : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! ALU result output.
-        data_mem_out        : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Data memory output.
-        inst_adr_out        : out std_logic_vector(ADR_WIDTH-1 downto 0)    --! Instruction address output.
+        clk                 : in std_logic;                                         --! Clock input.
+        rst                 : in std_logic;                                         --! Reset signal.
+        wb_sel_in           : in std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);     --! WB mux select input.
+        wb_sel_out          : out std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);    --! WB mux select output.
+        regfile_wr_en_in    : in std_logic;                                         --! Register file write enable input.
+        regfile_wr_en_out   : out std_logic;                                        --! Register file write enable output.
+        regfile_wr_adr_in   : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! Register file write address input.
+        regfile_wr_adr_out  : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! Register file write address output.
+        alu_res_in          : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! ALU result input.
+        alu_res_out         : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! ALU result output.
+        data_mem_in         : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Data memory input.
+        data_mem_out        : out std_logic_vector(DATA_WIDTH-1 downto 0)           --! Data memory output.
         );
 end MEM_WB;
 
@@ -81,7 +81,7 @@ begin
 
     -- WB select register
     wb_sel_reg : Reg            generic map(
-                                    DATA_WIDTH  => 1
+                                    DATA_WIDTH  => WB_MUX_SEL_WIDTH
                                     )
                                 port map(
                                     clk         => clk,
@@ -103,7 +103,7 @@ begin
 
     -- Register file write address register
     regfile_wr_adr_reg : Reg    generic map(
-                                    DATA_WIDTH  => 5
+                                    DATA_WIDTH  => REGFILE_ADR_WIDTH
                                     )
                                 port map(
                                     clk         => clk,
@@ -132,17 +132,6 @@ begin
                                     rst         => rst,
                                     input       => data_mem_in,
                                     output      => data_mem_out
-                                    );
-
-    -- Instruction address register
-    inst_adr_reg : Reg          generic map(
-                                    DATA_WIDTH  => ADR_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    input       => inst_adr_in,
-                                    output      => inst_adr_out
                                     );
 
 end behavior;
