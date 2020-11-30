@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.27
 --! 
 --! \date 2020/11/22
 --! 
@@ -63,9 +63,6 @@ begin
     process(clk)
     begin
         if rising_edge(clk) then
-            op1 <= reg_bank(to_integer(unsigned(rs1)));
-            op2 <= reg_bank(to_integer(unsigned(rs2)));
-
             if wr_en = '1' then
                 if to_integer(unsigned(rd)) /= 0 then   -- 0 = x0 = The constant zero register
                     reg_bank(to_integer(unsigned(rd))) <= data_write;
@@ -73,5 +70,8 @@ begin
             end if;
         end if;
     end process;
+
+    op1 <= reg_bank(to_integer(unsigned(rs1)));
+    op2 <= reg_bank(to_integer(unsigned(rs2)));
 
 end behavior;
