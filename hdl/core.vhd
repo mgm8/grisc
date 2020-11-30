@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.25
+--! \version 0.0.26
 --! 
 --! \date 2020/11/22
 --! 
@@ -58,8 +58,6 @@ architecture behavior of Core is
             DEBUG_MODE  : boolean := false                              --! Debug mode flag.
             );
         port(
-            clk         : in std_logic;                                 --! Reference clock.
-            rst         : in std_logic;                                 --! Resets the controller.
             opcode      : in std_logic_vector(6 downto 0);              --! Opcode.
             func3       : in std_logic_vector(2 downto 0);              --! func3.
             func7       : in std_logic_vector(6 downto 0);              --! func7.
@@ -465,8 +463,6 @@ begin
                             DEBUG_MODE          => DEBUG_MODE
                             )
                         port map(
-                            clk                 => clk_sig,
-                            rst                 => rst_sig,
                             opcode              => inst_if_id_sig(6 downto 0),
                             func3               => inst_if_id_sig(14 downto 12),
                             func7               => inst_if_id_sig(31 downto 25),

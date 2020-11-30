@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.22
+--! \version 0.0.26
 --! 
 --! \date 2020/11/23
 --!
@@ -41,8 +41,6 @@ entity Controller is
         DEBUG_MODE  : boolean := false                              --! Debug mode flag.
         );
     port(
-        clk         : in std_logic;                                 --! Reference clock.
-        rst         : in std_logic;                                 --! Resets the controller.
         opcode      : in std_logic_vector(6 downto 0);              --! Opcode.
         func3       : in std_logic_vector(2 downto 0);              --! func3.
         func7       : in std_logic_vector(6 downto 0);              --! func7.
