@@ -28,7 +28,7 @@
 --!
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.25
 --! 
 --! \date 2020/11/22
 --! 
@@ -73,7 +73,7 @@ begin
                 readline(load_file, hex_file_line);
                 hread(hex_file_line, data);
                 rom_mem(index) <= data;
-                index := index + 1;
+                index := index + 4;
             end loop;
         end if;
 		

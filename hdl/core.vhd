@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.23
+--! \version 0.0.25
 --! 
 --! \date 2020/11/22
 --! 
@@ -142,7 +142,6 @@ architecture behavior of Core is
             DATA_WIDTH  : natural := 32                                 --! Data width in bits.
         );
         port(
-            clk         : in  std_logic;                                --! Clock input.
             op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
             op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
             operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
@@ -158,7 +157,7 @@ architecture behavior of Core is
         port(
             clk         : in std_logic;                                 --! Clock signal.
             func3       : in std_logic_vector(2 downto 0);              --! 3-bit function code.
-            func7       : in std_logic_vector(6 downto 0);              --! 7-bit function code.
+            func7_5     : in std_logic;                                 --! Bit 5 of the 7-bit function code.
             alu_op      : in std_logic_vector(1 downto 0);              --! ALU operation.
             alu_ctrl    : out std_logic_vector(3 downto 0)              --! ALU operation code.
             );
@@ -426,7 +425,7 @@ begin
                             DATA_WIDTH          => MEM_ADR_WIDTH
                             )
                         port map(
-                            a                   => x"0000000000000001",
+                            a                   => x"0000000000000004",
                             b                   => pc_adr_sig,
                             result              => pc_add_res_sig
                             );
@@ -573,7 +572,6 @@ begin
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             clk                => clk_sig,
                              op1                => sig_015,
                              op2                => sig_021,
                              operation          => sig_011,
@@ -587,7 +585,7 @@ begin
                          port map(
                              clk                => clk_sig,
                              func3              => sig_012,
-                             func7              => sig_033,
+                             func7_5            => sig_033(5),
                              alu_op             => sig_009,
                              alu_ctrl           => sig_011
                              );
