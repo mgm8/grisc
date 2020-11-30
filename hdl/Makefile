@@ -68,6 +68,13 @@ immgen:
 	$(GHDL) -e -fsynopsys TB_ImmGen
 	$(GHDL) -r TB_ImmGen --stop-time=100ns --vcd=tb_immgen.vcd
 
+controller:
+	$(GHDL) -a clock.vhd
+	$(GHDL) -a -fsynopsys controller.vhd
+	$(GHDL) -a -fsynopsys tb_controller.vhd
+	$(GHDL) -e -fsynopsys TB_Controller
+	$(GHDL) -r TB_Controller --stop-time=100ns --vcd=tb_controller.vcd
+
 datapath:
 	$(GHDL) -a --std=08 clock.vhd
 	$(GHDL) -a -fsynopsys --std=08 reg.vhd
