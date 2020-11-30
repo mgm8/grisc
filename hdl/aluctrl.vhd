@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.22
+--! \version 0.0.24
 --! 
 --! \date 2020/11/23
 --!
@@ -41,7 +41,7 @@ entity ALUCtrl is
     port(
         clk         : in std_logic;                             --! Clock signal.
         func3       : in std_logic_vector(2 downto 0);          --! 3-bit function code.
-        func7       : in std_logic_vector(6 downto 0);          --! 7-bit function code.
+        func7_5     : in std_logic;                             --! Bit 5 of the 7-bit function code.
         alu_op      : in std_logic_vector(1 downto 0);          --! ALU operation.
         alu_ctrl    : out std_logic_vector(3 downto 0)          --! ALU operation code.
         );
@@ -57,19 +57,19 @@ architecture behavior of ALUCtrl is
 
 begin
 
-    process(func3, func7, alu_op)
+    process(func3, func7_5, alu_op)
     begin
         if alu_op = "00" then               -- load or store
             alu_ctrl <= ALU_OP_ID_ADD;
         elsif alu_op = "01" then            -- beq
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7 = "0000000" and func3 = "000") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "000") then      -- R-type
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif (alu_op = "10" and func7 = "0100000" and func3 = "000") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '1' and func3 = "000") then      -- R-type
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7 = "0000000" and func3 = "111") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "111") then      -- R-type
             alu_ctrl <= ALU_OP_ID_AND;
-        elsif (alu_op = "10" and func7 = "0000000" and func3 = "110") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "110") then      -- R-type
             alu_ctrl <= ALU_OP_ID_OR;
         else
             alu_ctrl <= "1111";

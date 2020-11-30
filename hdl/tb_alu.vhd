@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.24
 --! 
 --! \date 2020/11/22
 --! 
@@ -50,7 +50,6 @@ architecture behavior of TB_ALU is
             DATA_WIDTH  : natural := 32                                 --! Data width in bits.
         );
         port(
-            clk         : in  std_logic;                                --! Clock input.
             op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
             op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
             operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
@@ -84,7 +83,6 @@ begin
                     DATA_WIDTH  => DATA_WIDTH
                     )
                 port map(
-                    clk         => clk_sig,
                     op1         => op1_sig,
                     op2         => op2_sig,
                     operation   => operation_sig,

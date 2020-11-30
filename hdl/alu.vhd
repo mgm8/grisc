@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.24
 --! 
 --! \date 2020/11/22
 --! 
@@ -40,7 +40,6 @@ entity ALU is
         DATA_WIDTH  : natural := 32                                 --! Data width in bits.
     );
     port(
-        clk         : in  std_logic;                                --! Clock input.
         op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
         op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
         operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
@@ -62,6 +61,7 @@ architecture behavior of ALU is
 begin
 
     result <= result_sig;
+
     zero <= not (result_sig(31) or result_sig(30) or result_sig(29) or result_sig(28) or result_sig(27) or
                  result_sig(26) or result_sig(25) or result_sig(24) or result_sig(23) or result_sig(22) or
                  result_sig(21) or result_sig(20) or result_sig(19) or result_sig(18) or result_sig(17) or
@@ -70,18 +70,16 @@ begin
                  result_sig(6)  or result_sig(5)  or result_sig(4)  or result_sig(3)  or result_sig(2) or
                  result_sig(1)  or result_sig(0));
 
-    process(clk)
+    process(operation, op1, op2)
     begin
-        if rising_edge(clk) then
-            case operation is
-                when ALU_OP_ID_AND => result_sig <= op1 and op2;
-                when ALU_OP_ID_OR  => result_sig <= op1 or op2;
-                when ALU_OP_ID_ADD => result_sig <= op1 + op2;
-                when ALU_OP_ID_XOR => result_sig <= op1 xor op2;
-                when ALU_OP_ID_SUB => result_sig <= op1 - op2;
-                when others => result_sig <= (others => '0');
-            end case;
-        end if;
+        case operation is
+            when ALU_OP_ID_AND => result_sig <= op1 and op2;
+            when ALU_OP_ID_OR  => result_sig <= op1 or op2;
+            when ALU_OP_ID_ADD => result_sig <= op1 + op2;
+            when ALU_OP_ID_XOR => result_sig <= op1 xor op2;
+            when ALU_OP_ID_SUB => result_sig <= op1 - op2;
+            when others => result_sig <= (others => '0');
+        end case;
     end process;
 
 end behavior;
