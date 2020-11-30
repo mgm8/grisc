@@ -12,3 +12,4 @@ tb_regfile
 tb_immgen
 tb_aluctrl
 tb_datapath
+tb_core

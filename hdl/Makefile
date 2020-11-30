@@ -83,6 +83,27 @@ datapath:
 	$(GHDL) -e -fsynopsys --std=08 TB_Datapath
 	$(GHDL) -r TB_Datapath --stop-time=500ns --vcd=tb_datapath.vcd
 
+core:
+	$(GHDL) -a --std=08 clock.vhd
+	$(GHDL) -a -fsynopsys --std=08 controller.vhd
+	$(GHDL) -a -fsynopsys --std=08 reg.vhd
+	$(GHDL) -a -fsynopsys --std=08 rom.vhd
+	$(GHDL) -a -fsynopsys --std=08 regfile.vhd
+	$(GHDL) -a -fsynopsys --std=08 ram.vhd
+	$(GHDL) -a -fsynopsys --std=08 mux2x1.vhd
+	$(GHDL) -a -fsynopsys --std=08 alu.vhd
+	$(GHDL) -a -fsynopsys --std=08 aluctrl.vhd
+	$(GHDL) -a -fsynopsys --std=08 adder.vhd
+	$(GHDL) -a -fsynopsys --std=08 immgen.vhd
+	$(GHDL) -a -fsynopsys --std=08 tb_core.vhd
+	$(GHDL) -a -fsynopsys --std=08 if_id.vhd
+	$(GHDL) -a -fsynopsys --std=08 id_ex.vhd
+	$(GHDL) -a -fsynopsys --std=08 ex_mem.vhd
+	$(GHDL) -a -fsynopsys --std=08 mem_wb.vhd
+	$(GHDL) -a -fsynopsys --std=08 core.vhd
+	$(GHDL) -e -fsynopsys --std=08 TB_Core
+	$(GHDL) -r TB_Core --stop-time=500ns --vcd=tb_core.vcd
+
 clean:
 	$(GHDL) --clean
 	rm *.cf *.o
