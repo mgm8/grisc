@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.22
 --! 
 --! \date 2020/11/23
 --!
@@ -59,17 +59,17 @@ begin
 
     process(func3, func7, alu_op)
     begin
-        if alu_op = "00" then
+        if alu_op = "00" then               -- load or store
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif alu_op = "01" then
+        elsif alu_op = "01" then            -- beq
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7 = "0000000" and func3 = "000") then
+        elsif (alu_op = "10" and func7 = "0000000" and func3 = "000") then      -- R-type
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif (alu_op = "10" and func7 = "0100000" and func3 = "000") then
+        elsif (alu_op = "10" and func7 = "0100000" and func3 = "000") then      -- R-type
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7 = "0000000" and func3 = "111") then
+        elsif (alu_op = "10" and func7 = "0000000" and func3 = "111") then      -- R-type
             alu_ctrl <= ALU_OP_ID_AND;
-        elsif (alu_op = "10" and func7 = "0000000" and func3 = "110") then
+        elsif (alu_op = "10" and func7 = "0000000" and func3 = "110") then      -- R-type
             alu_ctrl <= ALU_OP_ID_OR;
         else
             alu_ctrl <= "1111";
