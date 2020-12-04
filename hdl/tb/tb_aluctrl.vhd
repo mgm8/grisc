@@ -52,7 +52,7 @@ architecture behavior of TB_ALUCtrl is
         port(
             clk         : in std_logic;                             --! Clock signal.
             func3       : in std_logic_vector(2 downto 0);          --! 3-bit function code.
-            func7       : in std_logic_vector(6 downto 0);          --! 7-bit function code.
+            func7_5     : in std_logic;                             --! Bit 5 of the 7-bit function code.
             alu_op      : in std_logic_vector(1 downto 0);          --! ALU operation.
             alu_ctrl    : out std_logic_vector(3 downto 0)          --! ALU operation code.
         );
@@ -68,7 +68,7 @@ architecture behavior of TB_ALUCtrl is
 
     signal clk_sig          : std_logic := '0';
     signal func3_sig        : std_logic_vector(2 downto 0) := (others => '0');
-    signal func7_sig        : std_logic_vector(6 downto 0) := (others => '0');
+    signal func7_5_sig      : std_logic := '0';
     signal alu_op_sig       : std_logic_vector(1 downto 0) := (others => '0');
     signal alu_ctrl_sig     : std_logic_vector(3 downto 0) := (others => '0');
 
@@ -84,7 +84,7 @@ begin
                     port map(
                         clk         => clk_sig,
                         func3       => func3_sig,
-                        func7       => func7_sig,
+                        func7_5     => func7_5_sig,
                         alu_op      => alu_op_sig,
                         alu_ctrl    => alu_ctrl_sig
                         );
@@ -94,7 +94,7 @@ begin
         -- ld/sd test
         alu_op_sig <= "00";
         func3_sig <= "101";
-        func7_sig <= "1010101";
+        func7_5_sig <= '1';
         wait for 50 ns;
 
         if alu_ctrl_sig /= ALU_OP_ID_ADD then
@@ -104,7 +104,7 @@ begin
         -- beq test
         alu_op_sig <= "01";
         func3_sig <= "101";
-        func7_sig <= "1010101";
+        func7_5_sig <= '0';
         wait for 50 ns;
 
         if alu_ctrl_sig /= ALU_OP_ID_SUB then
@@ -114,7 +114,7 @@ begin
         -- add test
         alu_op_sig <= "10";
         func3_sig <= "000";
-        func7_sig <= "0000000";
+        func7_5_sig <= '0';
         wait for 50 ns;
 
         if alu_ctrl_sig /= ALU_OP_ID_ADD then
@@ -124,7 +124,7 @@ begin
         -- sub test
         alu_op_sig <= "10";
         func3_sig <= "000";
-        func7_sig <= "0100000";
+        func7_5_sig <= '1';
         wait for 50 ns;
 
         if alu_ctrl_sig /= ALU_OP_ID_SUB then
@@ -134,7 +134,7 @@ begin
         -- and test
         alu_op_sig <= "10";
         func3_sig <= "111";
-        func7_sig <= "0000000";
+        func7_5_sig <= '0';
         wait for 50 ns;
 
         if alu_ctrl_sig /= ALU_OP_ID_AND then
@@ -144,7 +144,7 @@ begin
         -- or test
         alu_op_sig <= "10";
         func3_sig <= "110";
-        func7_sig <= "0000000";
+        func7_5_sig <= '0';
         wait for 50 ns;
 
         if alu_ctrl_sig /= ALU_OP_ID_OR then
