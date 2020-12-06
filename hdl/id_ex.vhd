@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.20
+--! \version 0.0.29
 --! 
 --! \date 2020/11/28
 --! 
@@ -79,7 +79,11 @@ entity ID_EX is
         func3_in            : in std_logic_vector(2 downto 0);                      --! func3 input.
         func3_out           : out std_logic_vector(2 downto 0);                     --! func3 output.
         func7_in            : in std_logic_vector(6 downto 0);                      --! func7 input.
-        func7_out           : out std_logic_vector(6 downto 0)                      --! func7 output.
+        func7_out           : out std_logic_vector(6 downto 0);                     --! func7 output.
+        rs1_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS1 input.
+        rs1_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! RS1 output.
+        rs2_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS2 input.
+        rs2_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0)    --! RS2 output.
         );
 end ID_EX;
 
@@ -277,6 +281,28 @@ begin
                                     rst         => rst,
                                     input       => func7_in,
                                     output      => func7_out
+                                    );
+
+    -- RS1 register
+    rs1_reg : Reg               generic map(
+                                    DATA_WIDTH  => REGFILE_ADR_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    input       => rs1_in,
+                                    output      => rs1_out
+                                    );
+
+    -- RS2 register
+    rs2_reg : Reg               generic map(
+                                    DATA_WIDTH  => REGFILE_ADR_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    input       => rs2_in,
+                                    output      => rs2_out
                                     );
 
 end behavior;

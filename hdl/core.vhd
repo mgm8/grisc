@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.28
+--! \version 0.0.29
 --! 
 --! \date 2020/11/22
 --! 
@@ -39,6 +39,7 @@ entity Core is
     generic(
         DATA_WIDTH      : natural := 32;                                --! Data width in bits.
         MEM_ADR_WIDTH   : natural := 64;                                --! Memory address width in bits.
+        RF_ADR_WIDTH    : natural := 5;                                 --! Register file address width in bits.
         IMEM_SIZE_BYTES : natural := 1024;                              --! Instruction memory size in bytes.
         DMEM_SIZE_BYTES : natural := 8*1024;                            --! Data memory in bytes.
         PROGRAM_FILE    : string := "program.hex";                      --! Instruction file.
@@ -112,7 +113,7 @@ architecture behavior of Core is
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.
             REG_NUMBER  : natural := 32                                 --! Total number of registers.
-        );
+            );
         port(
             clk         : in std_logic;                                 --! Clock input.
             rs1         : in std_logic_vector(4 downto 0);              --! First source register number.
@@ -122,7 +123,7 @@ architecture behavior of Core is
             data_write  : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data to write into register.
             op1         : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
             op2         : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operand 2.
-        );
+            );
     end component;
 
     component ImmGen
@@ -138,14 +139,14 @@ architecture behavior of Core is
     component ALU
         generic(
             DATA_WIDTH  : natural := 32                                 --! Data width in bits.
-        );
+            );
         port(
             op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
             op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
             operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
             result      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Opeartion output.
             zero        : out std_logic                                 --! Zero result flag.
-        );
+            );
     end component;
 
     component ALUCtrl
@@ -164,7 +165,7 @@ architecture behavior of Core is
     component ForwardingUnit
         generic(
             RF_ADR_WIDTH    : natural := 5                                  --! Regfile address width in bits.
-        );
+            );
         port(
             id_ex_rs1       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RS1.
             id_ex_rs2       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RS2.
@@ -174,14 +175,14 @@ architecture behavior of Core is
             mem_wb_rf_wr_en : in std_logic;                                 --! MEM/WB register file write enable.
             fwd_a           : out std_logic_vector(1 downto 0);             --! Forward A.
             fwd_b           : out std_logic_vector(1 downto 0)              --! Forward B.
-        );
+            );
     end component;
 
     component RAM
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.
             SIZE        : natural := 1024                               --! Memory size in bytes.
-        );
+            );
         port(
             clk         : in std_logic;                                 --! Clock input.
             wr_en       : in std_logic;                                 --! Write enable.
@@ -189,7 +190,7 @@ architecture behavior of Core is
             adr         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Memory address to access.
             data_in     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             data_out    : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
-        );
+            );
     end component;
 
     component Mux2x1
@@ -281,7 +282,11 @@ architecture behavior of Core is
             func3_in            : in std_logic_vector(2 downto 0);                      --! func3 input.
             func3_out           : out std_logic_vector(2 downto 0);                     --! func3 output.
             func7_in            : in std_logic_vector(6 downto 0);                      --! func7 input.
-            func7_out           : out std_logic_vector(6 downto 0)                      --! func7 output.
+            func7_out           : out std_logic_vector(6 downto 0);                     --! func7 output.
+            rs1_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS1 input.
+            rs1_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! RS1 output.
+            rs2_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS2 input.
+            rs2_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0)    --! RS2 output.
             );
     end component;
 
@@ -349,7 +354,7 @@ architecture behavior of Core is
     signal clk_sig              : std_logic := '0';
     signal rst_sig              : std_logic := '1';
     signal sig_006              : std_logic := '0';
-    signal sig_026              : std_logic_vector(4 downto 0)                  := (others => '0');
+    signal sig_026              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
     signal sig_025              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
 
     -- IF signals
@@ -393,6 +398,12 @@ architecture behavior of Core is
     signal sig_018              : std_logic                                     := '0';
     signal sig_019              : std_logic                                     := '0';
     signal sig_020              : std_logic                                     := '0';
+    signal sig_034              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
+    signal sig_035              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
+    signal sig_036              : std_logic_vector(1 downto 0)                  := (others => '0');
+    signal sig_037              : std_logic_vector(1 downto 0)                  := (others => '0');
+    signal sig_038              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
+    signal sig_039              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
 
     -- MEM signals
     signal dmem_output_sig      : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
@@ -404,7 +415,7 @@ architecture behavior of Core is
     signal sig_003              : std_logic                                     := '0';
     signal sig_004              : std_logic                                     := '0';
     signal sig_005              : std_logic                                     := '0';
-    signal sig_007              : std_logic_vector(4 downto 0)                  := (others => '0');
+    signal sig_007              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
     signal sig_021              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
     signal sig_009              : std_logic_vector(1 downto 0)                  := (others => '0');
 
@@ -531,7 +542,7 @@ begin
                             DATA_WIDTH          => DATA_WIDTH,
                             ADR_WIDTH           => MEM_ADR_WIDTH,
                             WB_MUX_SEL_WIDTH    => 1,
-                            REGFILE_ADR_WIDTH   => 5,
+                            REGFILE_ADR_WIDTH   => RF_ADR_WIDTH,
                             ALU_OP_WIDTH        => 2,
                             ALU_SRC_SEL_WIDTH   => 1
                             )
@@ -559,13 +570,17 @@ begin
                             op1_in              => op1_sig,
                             op1_out             => sig_015,
                             op2_in              => op2_sig,
-                            op2_out             => sig_014,
+                            op2_out             => sig_038,
                             imm_gen_in          => imm_gen_sig,
                             imm_gen_out         => sig_013,
                             func3_in            => inst_if_id_sig(14 downto 12),
                             func3_out           => sig_012,
                             func7_in            => inst_if_id_sig(31 downto 25),
-                            func7_out           => sig_033
+                            func7_out           => sig_033,
+                            rs1_in              => inst_if_id_sig(19 downto 15),
+                            rs1_out             => sig_034,
+                            rs2_in              => inst_if_id_sig(24 downto 20),
+                            rs2_out             => sig_035
                             );
 
     -- ##########################################################################
@@ -583,6 +598,28 @@ begin
                              result             => sig_022
                              );
 
+    op1_mux : Mux3x1     generic map(
+                             DATA_WIDTH         => DATA_WIDTH
+                             )
+                         port map(
+                             input1             => sig_015,
+                             input2             => sig_025,
+                             input3             => alu_res_ex_mem_sig,
+                             sel                => sig_036,
+                             output             => sig_039
+                             );
+
+    op2_mux : Mux3x1     generic map(
+                             DATA_WIDTH         => DATA_WIDTH
+                             )
+                         port map(
+                             input1             => sig_038,
+                             input2             => sig_025,
+                             input3             => alu_res_ex_mem_sig,
+                             sel                => sig_037,
+                             output             => sig_014
+                             );
+
     alu_src : Mux2x1     generic map(
                              DATA_WIDTH         => DATA_WIDTH
                              )
@@ -597,7 +634,7 @@ begin
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             op1                => sig_015,
+                             op1                => sig_039,
                              op2                => sig_021,
                              operation          => sig_011,
                              result             => sig_024,
@@ -614,6 +651,20 @@ begin
                              alu_op             => sig_009,
                              alu_ctrl           => sig_011
                              );
+
+    fd : ForwardingUnit generic map(
+                            RF_ADR_WIDTH        => RF_ADR_WIDTH
+                            )
+                        port map(
+                            id_ex_rs1           => sig_034,
+                            id_ex_rs2           => sig_035,
+                            ex_mem_rd           => sig_007,
+                            mem_wb_rd           => sig_026,
+                            ex_mem_rf_wr_en     => rf_wr_en_ex_mem_sig,
+                            mem_wb_rf_wr_en     => regfile_wr_en_sig,
+                            fwd_a               => sig_036,
+                            fwd_b               => sig_037
+                            );
 
     ex_mem_reg : EX_MEM generic map(
                             DATA_WIDTH          => DATA_WIDTH,
