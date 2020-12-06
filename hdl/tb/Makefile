@@ -101,6 +101,7 @@ core:
 	$(GHDL) -a -fsynopsys --std=08 ../ram.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../mux2x1.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../mux3x1.vhd
+	$(GHDL) -a -fsynopsys --std=08 ../hazarddetection.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../alu.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../aluctrl.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../adder.vhd
