@@ -161,6 +161,22 @@ architecture behavior of Core is
             );
     end component;
 
+    component ForwardingUnit
+        generic(
+            RF_ADR_WIDTH    : natural := 5                                  --! Regfile address width in bits.
+        );
+        port(
+            id_ex_rs1       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RS1.
+            id_ex_rs2       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RS2.
+            ex_mem_rd       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! EX/MEM RD.
+            mem_wb_rd       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! MEM/WB RD.
+            ex_mem_rf_wr_en : in std_logic;                                 --! EX/MEM register file write enable.
+            mem_wb_rf_wr_en : in std_logic;                                 --! MEM/WB register file write enable.
+            fwd_a           : out std_logic_vector(1 downto 0);             --! Forward A.
+            fwd_b           : out std_logic_vector(1 downto 0)              --! Forward B.
+        );
+    end component;
+
     component RAM
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.

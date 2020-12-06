@@ -105,6 +105,7 @@ core:
 	$(GHDL) -a -fsynopsys --std=08 ../aluctrl.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../adder.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../immgen.vhd
+	$(GHDL) -a -fsynopsys --std=08 ../forwardingunit.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../if_id.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../id_ex.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../ex_mem.vhd
