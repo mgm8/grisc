@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.29
+--! \version 0.0.31
 --! 
 --! \date 2020/11/28
 --! 
@@ -96,6 +96,7 @@ architecture behavior of ID_EX is
         port(
             clk         : in std_logic;                                 --! Clock input.
             rst         : in std_logic;                                 --! Reset signal.
+            en          : in std_logic;                                 --! Enable signal.
             input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
             );
@@ -134,6 +135,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => wb_sel_in,
                                     output      => wb_sel_out
                                     );
@@ -145,6 +147,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => regfile_wr_en_in_sig,
                                     output      => regfile_wr_en_out_sig
                                     );
@@ -156,6 +159,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => regfile_adr_in,
                                     output      => regfile_adr_out
                                     );
@@ -168,6 +172,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => mem_wr_en_in_sig,
                                     output      => mem_wr_en_out_sig
                                     );
@@ -179,6 +184,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => mem_rd_en_in_sig,
                                     output      => mem_rd_en_out_sig
                                     );
@@ -190,6 +196,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => branch_in_sig,
                                     output      => branch_out_sig
                                     );
@@ -202,6 +209,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => alu_op_in,
                                     output      => alu_op_out
                                     );
@@ -213,6 +221,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => alu_src_sel_in,
                                     output      => alu_src_sel_out
                                     );
@@ -224,6 +233,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => pc_adr_in,
                                     output      => pc_adr_out
                                     );
@@ -235,6 +245,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => op1_in,
                                     output      => op1_out
                                     );
@@ -246,6 +257,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => op2_in,
                                     output      => op2_out
                                     );
@@ -257,6 +269,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => imm_gen_in,
                                     output      => imm_gen_out
                                     );
@@ -268,6 +281,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => func3_in,
                                     output      => func3_out
                                     );
@@ -279,6 +293,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => func7_in,
                                     output      => func7_out
                                     );
@@ -290,6 +305,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => rs1_in,
                                     output      => rs1_out
                                     );
@@ -301,6 +317,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => rs2_in,
                                     output      => rs2_out
                                     );

@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.31
 --! 
 --! \date 2020/11/21
 --! 
@@ -41,6 +41,7 @@ entity Reg is
     port(
         clk         : in std_logic;                                 --! Clock input.
         rst         : in std_logic;                                 --! Reset signal.
+        en          : in std_logic;                                 --! Enable signal.
         input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
         output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
         );
@@ -57,7 +58,9 @@ begin
         if rst = '0' then
             output_sig <= (others => '0');
         elsif rising_edge(clk) then
-            output_sig <= input;
+            if en = '1' then
+                output_sig <= input;
+            end if;
         end if;
     end process;
 

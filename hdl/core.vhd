@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.29
+--! \version 0.0.31
 --! 
 --! \date 2020/11/22
 --! 
@@ -53,6 +53,21 @@ end Core;
 
 architecture behavior of Core is
  
+    component HazardDetection
+        generic(
+            RF_ADR_WIDTH        : natural := 5                                  --! Regfile address width in bits.
+            );
+        port(
+            if_id_rs1           : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! IF/ID RS1.
+            if_id_rs2           : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! IF/ID RS2.
+            id_ex_rd            : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RD.
+            id_ex_dmem_rd_en    : in std_logic;                                 --! ID/EX data memory read enable.
+            pc_wr_en            : out std_logic;                                --! PC enable.
+            if_id_wr_en         : out std_logic;                                --! IF/ID enable.
+            ctrl_mux_sel        : out std_logic                                 --! Controller mux selection.
+            );
+    end component;
+
     component Controller
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.
@@ -79,6 +94,7 @@ architecture behavior of Core is
         port(
             clk         : in std_logic;                                 --! Clock input.
             rst         : in std_logic;                                 --! Reset signal.
+            en          : in std_logic;                                 --! Enable signal.
             input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
             );
@@ -226,6 +242,7 @@ architecture behavior of Core is
         port(
             clk                 : in std_logic;                                 --! Clock input.
             rst                 : in std_logic;                                 --! Reset signal.
+            en                  : in std_logic;                                 --! Enable signal.
 
             -- EX
             pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
@@ -371,13 +388,11 @@ architecture behavior of Core is
     signal op1_sig              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
     signal op2_sig              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
     signal imm_gen_sig          : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal branch_sig           : std_logic                                     := '0';
-    signal sig_027              : std_logic                                     := '0';
-    signal sig_028              : std_logic_vector(0 downto 0)                  := (others => '0');
-    signal sig_029              : std_logic                                     := '0';
-    signal sig_030              : std_logic                                     := '0';
-    signal sig_031              : std_logic_vector(1 downto 0)                  := (others => '0');
-    signal sig_032              : std_logic_vector(0 downto 0)                  := (others => '0');
+    signal sig_040              : std_logic                                     := '0';
+    signal sig_041              : std_logic                                     := '0';
+    signal sig_042              : std_logic                                     := '0';
+    signal sig_043              : std_logic_vector(7 downto 0)                  := (others => '0');
+    signal sig_044              : std_logic_vector(7 downto 0)                  := (others => '0');
 
     -- EX signals
     signal sig_001              : std_logic                                     := '0';
@@ -455,6 +470,7 @@ begin
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
+                            en                  => sig_040,
                             input               => pc_in_sig,
                             output              => pc_adr_sig
                             );
@@ -486,6 +502,7 @@ begin
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
+                            en                  => sig_041,
                             pc_adr_in           => pc_adr_sig,
                             pc_adr_out          => pc_adr_if_id_sig,
                             inst_in             => inst_sig,
@@ -498,6 +515,19 @@ begin
     -- ##########################################################################
     -- ##########################################################################
 
+    h : HazardDetection generic map(
+                            RF_ADR_WIDTH        => RF_ADR_WIDTH
+                            )
+                        port map(
+                            if_id_rs1           => inst_if_id_sig(19 downto 15),
+                            if_id_rs2           => inst_if_id_sig(24 downto 20),
+                            id_ex_rd            => sig_008,
+                            id_ex_dmem_rd_en    => sig_019,
+                            pc_wr_en            => sig_040,
+                            if_id_wr_en         => sig_041,
+                            ctrl_mux_sel        => sig_042
+                            );
+
     ctrl : Controller   generic map(
                             DATA_WIDTH          => DATA_WIDTH,
                             DEBUG_MODE          => DEBUG_MODE
@@ -506,14 +536,24 @@ begin
                             opcode              => inst_if_id_sig(6 downto 0),
                             func3               => inst_if_id_sig(14 downto 12),
                             func7               => inst_if_id_sig(31 downto 25),
-                            reg_write           => sig_027,
-                            alu_src             => sig_032(0),
-                            alu_op              => sig_031,
-                            dmem_wr_en          => sig_030,
-                            dmem_rd_en          => sig_029,
-                            mem_to_reg          => sig_028(0),
-                            branch              => branch_sig
+                            reg_write           => sig_043(7),
+                            alu_src             => sig_043(6),
+                            alu_op              => sig_043(5 downto 4),
+                            dmem_wr_en          => sig_043(3),
+                            dmem_rd_en          => sig_043(2),
+                            mem_to_reg          => sig_043(1),
+                            branch              => sig_043(0)
                             );
+
+    ctrl_out : Mux2x1    generic map(
+                             DATA_WIDTH         => 8
+                             )
+                         port map(
+                             input1             => sig_043,
+                             input2             => "00000000",
+                             sel                => sig_042,
+                             output             => sig_044
+                             );
 
     regs : RegFile       generic map(
                              DATA_WIDTH         => DATA_WIDTH,
@@ -549,21 +589,21 @@ begin
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
-                            wb_sel_in           => sig_028,
+                            wb_sel_in           => sig_044(1 downto 1),
                             wb_sel_out          => sig_002,
-                            regfile_wr_en_in    => sig_027,
+                            regfile_wr_en_in    => sig_044(7),
                             regfile_wr_en_out   => sig_001,
                             regfile_adr_in      => inst_if_id_sig(11 downto 7),
                             regfile_adr_out     => sig_008,
-                            mem_wr_en_in        => sig_030,
+                            mem_wr_en_in        => sig_044(3),
                             mem_wr_en_out       => sig_020,
-                            mem_rd_en_in        => sig_029,
+                            mem_rd_en_in        => sig_044(2),
                             mem_rd_en_out       => sig_019,
-                            branch_in           => branch_sig,
+                            branch_in           => sig_044(0),
                             branch_out          => sig_018,
-                            alu_op_in           => sig_031,
+                            alu_op_in           => sig_044(5 downto 4),
                             alu_op_out          => sig_009,
-                            alu_src_sel_in      => sig_032,
+                            alu_src_sel_in      => sig_044(6 downto 6),
                             alu_src_sel_out     => sig_010,
                             pc_adr_in           => pc_adr_if_id_sig,
                             pc_adr_out          => sig_016,

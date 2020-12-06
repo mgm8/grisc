@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.21
+--! \version 0.0.31
 --! 
 --! \date 2020/11/28
 --! 
@@ -42,6 +42,7 @@ entity IF_ID is
     port(
         clk                 : in std_logic;                                 --! Clock input.
         rst                 : in std_logic;                                 --! Reset signal.
+        en                  : in std_logic;                                 --! Enable signal.
 
         -- EX
         pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
@@ -62,6 +63,7 @@ architecture behavior of IF_ID is
         port(
             clk         : in std_logic;                                 --! Clock input.
             rst         : in std_logic;                                 --! Reset signal.
+            en          : in std_logic;                                 --! Enable signal.
             input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
             );
@@ -76,6 +78,7 @@ begin
                         port map(
                             clk         => clk,
                             rst         => rst,
+                            en          => en,
                             input       => pc_adr_in,
                             output      => pc_adr_out
                             );
@@ -87,6 +90,7 @@ begin
                         port map(
                             clk         => clk,
                             rst         => rst,
+                            en          => en,
                             input       => inst_in,
                             output      => inst_out
                             );

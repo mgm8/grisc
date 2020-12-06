@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.19
+--! \version 0.0.31
 --! 
 --! \date 2020/11/28
 --! 
@@ -66,6 +66,7 @@ architecture behavior of MEM_WB is
         port(
             clk         : in std_logic;                                 --! Clock input.
             rst         : in std_logic;                                 --! Reset signal.
+            en          : in std_logic;                                 --! Enable signal.
             input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
             );
@@ -86,6 +87,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => wb_sel_in,
                                     output      => wb_sel_out
                                     );
@@ -97,6 +99,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => regfile_wr_en_in_sig,
                                     output      => regfile_wr_en_out_sig
                                     );
@@ -108,6 +111,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => regfile_wr_adr_in,
                                     output      => regfile_wr_adr_out
                                     );
@@ -119,6 +123,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => alu_res_in,
                                     output      => alu_res_out
                                     );
@@ -130,6 +135,7 @@ begin
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
+                                    en          => '1',
                                     input       => data_mem_in,
                                     output      => data_mem_out
                                     );
