@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.26
+--! \version 0.0.28
 --! 
 --! \date 2020/11/22
 --! 
@@ -185,6 +185,19 @@ architecture behavior of Core is
             input2  : in  std_logic_vector(DATA_WIDTH-1 downto 0);      --! Input 2.
             sel     : in  std_logic;                                    --! Input selection.
             output  : out std_logic_vector(DATA_WIDTH-1 downto 0)       --! Output.
+            );
+    end component;
+
+    component Mux3x1
+        generic(
+            DATA_WIDTH  : natural := 32                                 --! Width (in bits) of the inputs.
+            );
+        port(
+            input1      : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Input 1.
+            input2      : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Input 2.
+            input3      : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Input 3.
+            sel         : in  std_logic_vector(1 downto 0);             --! Input selection.
+            output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Output.
             );
     end component;
 
