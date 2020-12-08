@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.24
+--! \version 0.0.32
 --! 
 --! \date 2020/11/23
 --!
@@ -54,23 +54,35 @@ architecture behavior of ALUCtrl is
     constant ALU_OP_ID_ADD : std_logic_vector(alu_ctrl'range) := "0010";    --! ADD operation.
     constant ALU_OP_ID_XOR : std_logic_vector(alu_ctrl'range) := "0011";    --! XOR operation.
     constant ALU_OP_ID_SUB : std_logic_vector(alu_ctrl'range) := "0110";    --! SUB operation.
+    constant ALU_OP_ID_SLT : std_logic_vector(alu_ctrl'range) := "0111";    --! SLT operation.
+    constant ALU_OP_ID_NOR : std_logic_vector(alu_ctrl'range) := "1100";    --! NOR operation.
+    constant ALU_OP_ID_SLL : std_logic_vector(alu_ctrl'range) := "0100";    --! SLL operation.
+    constant ALU_OP_ID_SRL : std_logic_vector(alu_ctrl'range) := "0101";    --! SRL operation.
 
 begin
 
     process(func3, func7_5, alu_op)
     begin
-        if alu_op = "00" then               -- load or store
+        if alu_op = "00" then                                               -- load or store
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif alu_op = "01" then            -- beq
+        elsif alu_op = "01" then                                            -- beq
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "000") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "000") then      -- R-type: add
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif (alu_op = "10" and func7_5 = '1' and func3 = "000") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '1' and func3 = "000") then      -- R-type: sub
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "111") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "111") then      -- R-type: and
             alu_ctrl <= ALU_OP_ID_AND;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "110") then      -- R-type
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "110") then      -- R-type: or
             alu_ctrl <= ALU_OP_ID_OR;
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "100") then      -- R-type: xor
+            alu_ctrl <= ALU_OP_ID_XOR;
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "001") then      -- R-type: sll
+            alu_ctrl <= ALU_OP_ID_SLL;
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "101") then      -- R-type: srl
+            alu_ctrl <= ALU_OP_ID_SRL;
+        elsif (alu_op = "10" and func7_5 = '0' and func3 = "010") then      -- R-type: srl
+            alu_ctrl <= ALU_OP_ID_SLT;
         else
             alu_ctrl <= "1111";
         end if;

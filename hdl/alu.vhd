@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.24
+--! \version 0.0.32
 --! 
 --! \date 2020/11/22
 --! 
@@ -34,6 +34,7 @@
 library ieee;
     use ieee.std_logic_1164.all;
     use ieee.std_logic_unsigned.all;
+    use ieee.numeric_std.all;
 
 entity ALU is
     generic(
@@ -55,8 +56,13 @@ architecture behavior of ALU is
     constant ALU_OP_ID_ADD : std_logic_vector(operation'range) := "0010";   --! ADD operation.
     constant ALU_OP_ID_XOR : std_logic_vector(operation'range) := "0011";   --! XOR operation.
     constant ALU_OP_ID_SUB : std_logic_vector(operation'range) := "0110";   --! SUB operation.
+    constant ALU_OP_ID_SLT : std_logic_vector(operation'range) := "0111";   --! SLT operation.
+    constant ALU_OP_ID_NOR : std_logic_vector(operation'range) := "1100";   --! NOR operation.
+    constant ALU_OP_ID_SLL : std_logic_vector(operation'range) := "0100";   --! SLL operation.
+    constant ALU_OP_ID_SRL : std_logic_vector(operation'range) := "0101";   --! SRL operation.
 
-    signal result_sig : std_logic_vector(result'range) := (others => '0');
+    signal result_sig   : std_logic_vector(result'range) := (others => '0');
+    signal slt_buf_sig  : std_logic_vector(DATA_WIDTH downto 0) := (others => '0');
 
 begin
 
@@ -78,6 +84,16 @@ begin
             when ALU_OP_ID_ADD => result_sig <= op1 + op2;
             when ALU_OP_ID_XOR => result_sig <= op1 xor op2;
             when ALU_OP_ID_SUB => result_sig <= op1 - op2;
+            when ALU_OP_ID_SLT =>
+                slt_buf_sig <= std_logic_vector(unsigned('0' & op1) - unsigned('0' & op2));
+                if slt_buf_sig(32) = '1' then
+                    result_sig <= x"00000001";
+                else
+                    result_sig <= x"00000000";
+                end if;
+            when ALU_OP_ID_NOR => result_sig <= op1 nor op2;
+            when ALU_OP_ID_SLL => result_sig <= std_logic_vector(shift_left(unsigned(op1), to_integer(unsigned(op2))));
+            when ALU_OP_ID_SRL => result_sig <= std_logic_vector(shift_right(unsigned(op1), to_integer(unsigned(op2))));
             when others => result_sig <= (others => '0');
         end case;
     end process;
