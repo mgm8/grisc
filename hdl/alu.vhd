@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.32
+--! \version 0.0.33
 --! 
 --! \date 2020/11/22
 --! 
@@ -62,7 +62,7 @@ architecture behavior of ALU is
     constant ALU_OP_ID_SRL : std_logic_vector(operation'range) := "0101";   --! SRL operation.
 
     signal result_sig   : std_logic_vector(result'range) := (others => '0');
-    signal slt_buf_sig  : std_logic_vector(DATA_WIDTH downto 0) := (others => '0');
+    signal res_buf_sig  : std_logic_vector(DATA_WIDTH downto 0) := (others => '0');
 
 begin
 
@@ -85,8 +85,7 @@ begin
             when ALU_OP_ID_XOR => result_sig <= op1 xor op2;
             when ALU_OP_ID_SUB => result_sig <= op1 - op2;
             when ALU_OP_ID_SLT =>
-                slt_buf_sig <= std_logic_vector(unsigned('0' & op1) - unsigned('0' & op2));
-                if slt_buf_sig(32) = '1' then
+                if op1 < op2 then
                     result_sig <= x"00000001";
                 else
                     result_sig <= x"00000000";
