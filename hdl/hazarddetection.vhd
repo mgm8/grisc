@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.30
+--! \version 0.0.37
 --! 
 --! \date 2020/12/06
 --!
@@ -34,37 +34,59 @@
 library ieee;
     use ieee.std_logic_1164.all;
     use ieee.std_logic_unsigned.all;
+    use ieee.numeric_std.all;
+
+library work;
+    use work.grisc.all;
 
 entity HazardDetection is
     generic(
         RF_ADR_WIDTH        : natural := 5                                  --! Regfile address width in bits.
         );
     port(
-        if_id_rs1           : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! IF/ID RS1.
-        if_id_rs2           : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! IF/ID RS2.
-        id_ex_rd            : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RD.
-        id_ex_dmem_rd_en    : in std_logic;                                 --! ID/EX data memory read enable.
-        pc_wr_en            : out std_logic;                                --! PC enable.
-        if_id_wr_en         : out std_logic;                                --! IF/ID enable.
-        ctrl_mux_sel        : out std_logic                                 --! Controller mux selection.
+        ex_do_mem_read_en   : in std_logic;                                 --! .
+        ex_reg_wr_idx       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! .
+        instr_id            : in std_logic_vector(5 downto 0);              --! Instruction ID.
+        id_reg1_idx         : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! .
+        id_reg2_idx         : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! .
+        mem_do_reg_write    : in std_logic;                                 --! .
+        wb_do_reg_write     : in std_logic;                                 --! .
+        hazard_id_ex_en     : out std_logic;                                --! ID/EX enable.
+        hazard_fe_en        : out std_logic;                                --! PC enable.
+        hazard_ex_mem_clear : out std_logic                                 --! EX/MEM clear.
         );
 end HazardDetection;
 
 architecture behavior of HazardDetection is
 
+    signal hazard_sig           : std_logic := '0';
+    signal ecall_hazard_sig     : std_logic := '0';
+    signal load_use_hazard_sig  : std_logic := '0';
+
 begin
 
-    process(id_ex_dmem_rd_en, id_ex_rd, if_id_rs1, if_id_rs2)
+    hazard_sig <= ecall_hazard_sig or load_use_hazard_sig;
+
+    process(ex_reg_wr_idx, id_reg1_idx, id_reg2_idx, ex_do_mem_read_en)
     begin
-        if ((id_ex_dmem_rd_en = '1') and ((id_ex_rd = if_id_rs1) or (id_ex_rd = if_id_rs2))) then
-            pc_wr_en <= '0';
-            if_id_wr_en <= '0';
-            ctrl_mux_sel <= '1';
+        if (((ex_reg_wr_idx = id_reg1_idx) or (ex_reg_wr_idx = id_reg2_idx)) and (ex_do_mem_read_en = '1')) then
+            load_use_hazard_sig <= '1';
         else
-            pc_wr_en <= '1';
-            if_id_wr_en <= '1';
-            ctrl_mux_sel <= '0';
+            load_use_hazard_sig <= '0';
         end if;
     end process;
+
+    process(instr_id, mem_do_reg_write, wb_do_reg_write)
+    begin
+        if ((instr_id = RISCV_INSTR_ECALL) and ((mem_do_reg_write = '1') or (wb_do_reg_write = '1'))) then
+            ecall_hazard_sig <= '1';
+        else
+            ecall_hazard_sig <= '0';
+        end if;
+    end process;
+
+    hazard_fe_en <= not hazard_sig;
+    hazard_id_ex_en <= not ecall_hazard_sig;
+    hazard_ex_mem_clear <= not ecall_hazard_sig;
 
 end behavior;
