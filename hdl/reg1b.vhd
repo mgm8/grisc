@@ -1,5 +1,5 @@
 --
--- version.vhd
+-- reg1b.vhd
 --
 -- Copyright (C) 2020, Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --
@@ -22,22 +22,45 @@
 --
 
 --! 
---! \brief Version control file.
+--! \brief Flip-flop register (1-bit).
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
 --! \version 0.0.35
 --! 
---! \date 2020/11/21
+--! \date 2020/12/14
 --! 
 
-package version is
+library ieee;
+    use ieee.std_logic_1164.all;
 
-    constant GRISC_VERSION  : string := "0.0.35";
+entity Reg1b is
+    port(
+        clk         : in std_logic;     --! Clock input.
+        rst         : in std_logic;     --! Reset signal.
+        en          : in std_logic;     --! Enable signal.
+        input       : in std_logic;     --! Data input.
+        output      : out std_logic     --! Data output.
+        );
+end Reg1b;
 
-    constant GRISC_AUTHOR   : string := "Gabriel Mariano Marcelino";
-    constant GRISC_EMAIL    : string := "gabriel.mm8@gmail.com";
+architecture behavior of Reg1b is
 
-    constant GRISC_STATUS   : string := "Development";
+    signal output_sig : std_logic := '0';
 
-end version;
+begin
+
+    process(clk)
+    begin
+        if rst = '0' then
+            output_sig <= '0';
+        elsif rising_edge(clk) then
+            if en = '1' then
+                output_sig <= input;
+            end if;
+        end if;
+    end process;
+
+    output <= output_sig;
+
+end behavior;
