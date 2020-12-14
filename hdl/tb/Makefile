@@ -44,10 +44,11 @@ mux:
 
 alu:
 	$(GHDL) -a clock.vhd
+	$(GHDL) -a -fsynopsys ../grisc.vhd
 	$(GHDL) -a -fsynopsys ../alu.vhd
 	$(GHDL) -a -fsynopsys tb_alu.vhd
 	$(GHDL) -e -fsynopsys TB_ALU
-	$(GHDL) -r TB_ALU $(FLAGS) --vcd=tb_alu.vcd
+	$(GHDL) -r TB_ALU --stop-time=500ns --vcd=tb_alu.vcd
 
 aluctrl:
 	$(GHDL) -a clock.vhd
@@ -94,8 +95,12 @@ datapath:
 
 core:
 	$(GHDL) -a --std=08 clock.vhd
+	$(GHDL) -a -fsynopsys --std=08 ../grisc.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../controller.vhd
+	$(GHDL) -a -fsynopsys --std=08 ../decode.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../reg.vhd
+	$(GHDL) -a -fsynopsys --std=08 ../reg1b.vhd
+	$(GHDL) -a -fsynopsys --std=08 ../branch.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../rom.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../regfile.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../ram.vhd
@@ -103,7 +108,6 @@ core:
 	$(GHDL) -a -fsynopsys --std=08 ../mux3x1.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../hazarddetection.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../alu.vhd
-	$(GHDL) -a -fsynopsys --std=08 ../aluctrl.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../adder.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../immgen.vhd
 	$(GHDL) -a -fsynopsys --std=08 ../forwardingunit.vhd
@@ -114,7 +118,7 @@ core:
 	$(GHDL) -a -fsynopsys --std=08 ../core.vhd
 	$(GHDL) -a -fsynopsys --std=08 tb_core.vhd
 	$(GHDL) -e -fsynopsys --std=08 TB_Core
-	$(GHDL) -r TB_Core --stop-time=500ns --vcd=tb_core.vcd
+	$(GHDL) -r TB_Core --stop-time=750ns --vcd=tb_core.vcd
 
 clean:
 	$(GHDL) --clean

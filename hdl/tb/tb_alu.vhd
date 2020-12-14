@@ -26,13 +26,16 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.24
+--! \version 0.0.36
 --! 
 --! \date 2020/11/22
 --! 
 
 library ieee;
     use ieee.std_logic_1164.all;
+
+library work;
+    use work.grisc.all;
 
 entity TB_ALU is
 end TB_ALU;
@@ -47,31 +50,23 @@ architecture behavior of TB_ALU is
 
     component ALU is
         generic(
-            DATA_WIDTH  : natural := 32                                 --! Data width in bits.
+            DATA_WIDTH : natural := 32                              --! Data width in bits.
         );
         port(
-            op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
-            op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
-            operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
-            result      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Opeartion output.
-            zero        : out std_logic                                 --! Zero result flag.
+            ctrl    : in  std_logic_vector(4 downto 0);             --! Operation control.
+            op1     : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
+            op2     : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
+            res     : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operation output.
         );
     end component;
 
     constant DATA_WIDTH     : natural := 32;
 
-    constant ALU_OP_ID_AND : std_logic_vector(3 downto 0) := "0000";    --! AND operation.
-    constant ALU_OP_ID_OR  : std_logic_vector(3 downto 0) := "0001";    --! OR operation.
-    constant ALU_OP_ID_ADD : std_logic_vector(3 downto 0) := "0010";    --! ADD operation.
-    constant ALU_OP_ID_XOR : std_logic_vector(3 downto 0) := "0011";    --! XOR operation.
-    constant ALU_OP_ID_SUB : std_logic_vector(3 downto 0) := "0110";    --! SUB operation.
-
     signal clk_sig          : std_logic := '0';
+    signal ctrl_sig         : std_logic_vector(4 downto 0) := (others => '0');
     signal op1_sig          : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
     signal op2_sig          : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-    signal operation_sig    : std_logic_vector(3 downto 0) := (others => '0');
-    signal result_sig       : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-    signal zero_sig         : std_logic := '0';
+    signal res_sig          : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
 
 begin
 
@@ -83,53 +78,126 @@ begin
                     DATA_WIDTH  => DATA_WIDTH
                     )
                 port map(
+                    ctrl        => ctrl_sig,
                     op1         => op1_sig,
                     op2         => op2_sig,
-                    operation   => operation_sig,
-                    result      => result_sig,
-                    zero        => zero_sig
+                    res         => res_sig
                     );
 
     process is
     begin
-        -- ADD test
-        op1_sig <= x"00000002";
-        op2_sig <= x"00000001";
-        operation_sig <= ALU_OP_ID_ADD;
+        -- NOP test
+        op1_sig <= x"0000000A";
+        op2_sig <= x"00000008";
+        ctrl_sig <= GRISC_ALU_OP_NOP;
         wait for 50 ns;
 
-        if result_sig /= x"00000003" then
+        if res_sig /= x"00000000" then
+            assert false report "Error: Wrong result on the NOP operator!" severity failure;
+        end if;
+
+        -- ADD test
+        ctrl_sig <= GRISC_ALU_OP_ADD;
+        wait for 50 ns;
+
+        if res_sig /= x"00000012" then
             assert false report "Error: Wrong result on the ADD operator!" severity failure;
         end if;
 
-        -- AND test
-        op1_sig <= x"00000001";
-        op2_sig <= x"00000001";
-        operation_sig <= ALU_OP_ID_AND;
+        -- SUB test
+        ctrl_sig <= GRISC_ALU_OP_SUB;
         wait for 50 ns;
 
-        if result_sig /= x"00000001" then
+        if res_sig /= x"00000002" then
+            assert false report "Error: Wrong result on the SUB operator!" severity failure;
+        end if;
+
+        -- MUL test
+        ctrl_sig <= GRISC_ALU_OP_MUL;
+        wait for 50 ns;
+
+        if res_sig /= x"00000050" then
+            assert false report "Error: Wrong result on the MUL operator!" severity failure;
+        end if;
+
+        -- DIV test
+--        ctrl_sig <= GRISC_ALU_OP_DIV;
+--        wait for 50 ns;
+--
+--        if res_sig /= x"00000001" then
+--            assert false report "Error: Wrong result on the DIV operator!" severity failure;
+--        end if;
+
+        -- AND test
+        ctrl_sig <= GRISC_ALU_OP_AND;
+        wait for 50 ns;
+
+        if res_sig /= x"00000008" then
             assert false report "Error: Wrong result on the AND operator!" severity failure;
         end if;
 
         -- OR test
-        op1_sig <= x"00000001";
-        op2_sig <= x"00000004";
-        operation_sig <= ALU_OP_ID_OR;
+        ctrl_sig <= GRISC_ALU_OP_OR;
         wait for 50 ns;
 
-        if result_sig /= x"00000005" then
+        if res_sig /= x"0000000A" then
             assert false report "Error: Wrong result on the OR operator!" severity failure;
         end if;
 
         -- XOR test
-        op1_sig <= x"00000021";
-        op2_sig <= x"00000006";
-        operation_sig <= ALU_OP_ID_XOR;
+        ctrl_sig <= GRISC_ALU_OP_XOR;
         wait for 50 ns;
 
-        if result_sig /= x"00000027" then
+        if res_sig /= x"00000002" then
             assert false report "Error: Wrong result on the XOR operator!" severity failure;
+        end if;
+
+        -- SL tes
+        ctrl_sig <= GRISC_ALU_OP_SL;
+        wait for 50 ns;
+
+        if res_sig /= x"00000A00" then
+            assert false report "Error: Wrong result on the SL operator!" severity failure;
+        end if;
+
+        -- SRA test
+        ctrl_sig <= GRISC_ALU_OP_SRA;
+        wait for 50 ns;
+
+        if res_sig /= x"00000000" then
+            assert false report "Error: Wrong result on the SRA operator!" severity failure;
+        end if;
+
+        -- SRL test
+        ctrl_sig <= GRISC_ALU_OP_SRL;
+        wait for 50 ns;
+
+        if res_sig /= x"00000A00" then
+            assert false report "Error: Wrong result on the SRL operator!" severity failure;
+        end if;
+
+        -- LUI test
+        ctrl_sig <= GRISC_ALU_OP_LUI;
+        wait for 50 ns;
+
+        if res_sig /= op2_sig then
+            assert false report "Error: Wrong result on the LUI operator!" severity failure;
+        end if;
+
+        -- LT test
+        ctrl_sig <= GRISC_ALU_OP_LT;
+        wait for 50 ns;
+
+        if res_sig /= x"00000000" then
+            assert false report "Error: Wrong result on the LT operator!" severity failure;
+        end if;
+
+        -- LTU test
+        ctrl_sig <= GRISC_ALU_OP_LTU;
+        wait for 50 ns;
+
+        if res_sig /= x"00000000" then
+            assert false report "Error: Wrong result on the LTU operator!" severity failure;
         end if;
 
         assert false report "Test completed!" severity note;
