@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.31
+--! \version 0.0.39
 --! 
 --! \date 2020/11/28
 --! 
@@ -37,53 +37,55 @@ library ieee;
 entity ID_EX is
     generic(
         DATA_WIDTH          : natural := 32;                                        --! Data width in bits.
-        ADR_WIDTH           : natural := 64;                                        --! Address width in bits.
-        WB_MUX_SEL_WIDTH    : natural := 1;                                         --! WB mux select width in bits.
-        REGFILE_ADR_WIDTH   : natural := 5;                                         --! Register file address width in bits
-        ALU_OP_WIDTH        : natural := 2;                                         --! ALU operation width in bits.
-        ALU_SRC_SEL_WIDTH   : natural := 1                                          --! ALU source mux select width in bits.
+        ADR_WIDTH           : natural := 32;                                        --! Address width in bits.
+        REGFILE_ADR_WIDTH   : natural := 5                                          --! Register file address width in bits
         );
     port(
         clk                 : in std_logic;                                         --! Clock input.
         rst                 : in std_logic;                                         --! Reset signal.
+        en                  : in std_logic;                                         --! Enable signal.
 
-        -- WB
-        wb_sel_in           : in std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);     --! WB mux select input.
-        wb_sel_out          : out std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);    --! WB mux select output.
-        regfile_wr_en_in    : in std_logic;                                         --! Register file write enable input.
-        regfile_wr_en_out   : out std_logic;                                        --! Register file write enable output.
-        regfile_adr_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! Register file address input.
-        regfile_adr_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! Register file address output.
+        reg_do_write_in     : in std_logic;                                         --! .
+        reg_wr_src_ctrl_in  : in std_logic_vector(1 downto 0);                      --! .
+        mem_do_write_in     : in std_logic;                                         --! .
+        mem_do_read_in      : in std_logic;                                         --! .
+        mem_op_in           : in std_logic_vector(3 downto 0);                      --! .
+        do_jmp_in           : in std_logic;                                         --! .
+        do_br_in            : in std_logic;                                         --! .
+        alu_op1_ctrl_in     : in std_logic;                                         --! .
+        alu_op2_ctrl_in     : in std_logic;                                         --! .
+        alu_ctrl_in         : in std_logic_vector(4 downto 0);                      --! .
+        br_op_in            : in std_logic_vector(2 downto 0);                      --! .
+        pc4_in              : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! .
+        pc_in               : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! .
+        r1_in               : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+        r2_in               : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+        imm_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+        rd_reg1_idx_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+        rd_reg2_idx_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+        wr_reg_idx_in       : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+        instr_id_in         : in std_logic_vector(5 downto 0);                      --! .
 
-        -- MEM
-        mem_wr_en_in        : in std_logic;                                         --! Data memory write enable input.
-        mem_wr_en_out       : out std_logic;                                        --! Data memory write enable output.
-        mem_rd_en_in        : in std_logic;                                         --! Data memory read enable input.
-        mem_rd_en_out       : out std_logic;                                        --! Data memory read enable output.
-        branch_in           : in std_logic;                                         --! Branch input.
-        branch_out          : out std_logic;                                        --! Branch output.
-
-        -- EX
-        alu_op_in           : in std_logic_vector(ALU_OP_WIDTH-1 downto 0);         --! ALU operation input.
-        alu_op_out          : out std_logic_vector(ALU_OP_WIDTH-1 downto 0);        --! ALU operation output.
-        alu_src_sel_in      : in std_logic_vector(ALU_SRC_SEL_WIDTH-1 downto 0);    --! ALU source select input.
-        alu_src_sel_out     : out std_logic_vector(ALU_SRC_SEL_WIDTH-1 downto 0);   --! ALU source select output.
-        pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! PC address input.
-        pc_adr_out          : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! PC address output.
-        op1_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Operand 1 input.
-        op1_out             : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! Operand 1 output.
-        op2_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Operand 2 input.
-        op2_out             : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! Operand 2 output.
-        imm_gen_in          : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! Immediate generator input.
-        imm_gen_out         : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! Immediate generator output.
-        func3_in            : in std_logic_vector(2 downto 0);                      --! func3 input.
-        func3_out           : out std_logic_vector(2 downto 0);                     --! func3 output.
-        func7_in            : in std_logic_vector(6 downto 0);                      --! func7 input.
-        func7_out           : out std_logic_vector(6 downto 0);                     --! func7 output.
-        rs1_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS1 input.
-        rs1_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! RS1 output.
-        rs2_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS2 input.
-        rs2_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0)    --! RS2 output.
+        reg_do_write_out    : out std_logic;                                        --! .
+        reg_wr_src_ctrl_out : out std_logic_vector(1 downto 0);                     --! .
+        mem_do_write_out    : out std_logic;                                        --! .
+        mem_do_read_out     : out std_logic;                                        --! .
+        mem_op_out          : out std_logic_vector(3 downto 0);                     --! .
+        do_jmp_out          : out std_logic;                                        --! .
+        do_br_out           : out std_logic;                                        --! .
+        alu_op1_ctrl_out    : out std_logic;                                        --! .
+        alu_op2_ctrl_out    : out std_logic;                                        --! .
+        alu_ctrl_out        : out std_logic_vector(4 downto 0);                     --! .
+        br_op_out           : out std_logic_vector(2 downto 0);                     --! .
+        pc4_out             : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! .
+        pc_out              : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! .
+        r1_out              : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+        r2_out              : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+        imm_out             : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+        rd_reg1_idx_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! .
+        rd_reg2_idx_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! .
+        wr_reg_idx_out      : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! .
+        instr_id_out        : out std_logic_vector(5 downto 0)                      --! .
         );
 end ID_EX;
 
@@ -102,224 +104,217 @@ architecture behavior of ID_EX is
             );
     end component;
 
-    signal regfile_wr_en_in_sig     : std_logic_vector(0 downto 0) := (others => '0');
-    signal regfile_wr_en_out_sig    : std_logic_vector(0 downto 0) := (others => '0');
-
-    signal mem_wr_en_in_sig         : std_logic_vector(0 downto 0) := (others => '0');
-    signal mem_wr_en_out_sig        : std_logic_vector(0 downto 0) := (others => '0');
-
-    signal mem_rd_en_in_sig         : std_logic_vector(0 downto 0) := (others => '0');
-    signal mem_rd_en_out_sig        : std_logic_vector(0 downto 0) := (others => '0');
-
-    signal branch_in_sig            : std_logic_vector(0 downto 0) := (others => '0');
-    signal branch_out_sig           : std_logic_vector(0 downto 0) := (others => '0');
+    component Reg1b
+        port(
+            clk         : in std_logic;     --! Clock input.
+            rst         : in std_logic;     --! Reset signal.
+            en          : in std_logic;     --! Enable signal.
+            input       : in std_logic;     --! Data input.
+            output      : out std_logic     --! Data output.
+            );
+    end component;
 
 begin
 
-    regfile_wr_en_in_sig(0) <= regfile_wr_en_in;
-    regfile_wr_en_out       <= regfile_wr_en_out_sig(0);
+    reg_0: Reg1b                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => reg_do_write_in,
+                                    output      => reg_do_write_out
+                                    );
 
-    mem_wr_en_in_sig(0)     <= mem_wr_en_in;
-    mem_wr_en_out           <= mem_wr_en_out_sig(0);
-
-    mem_rd_en_in_sig(0)     <= mem_rd_en_in;
-    mem_rd_en_out           <= mem_rd_en_out_sig(0);
-
-    branch_in_sig(0)        <= branch_in;
-    branch_out              <= branch_out_sig(0);
-
-    -- WB select register
-    wb_sel_reg : Reg            generic map(
-                                    DATA_WIDTH  => WB_MUX_SEL_WIDTH
+    reg_1 : Reg                  generic map(
+                                    DATA_WIDTH  => 2
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => wb_sel_in,
-                                    output      => wb_sel_out
+                                    en          => en,
+                                    input       => reg_wr_src_ctrl_in,
+                                    output      => reg_wr_src_ctrl_out
                                     );
 
-    -- Register file write enable register
-    regfile_wr_en_reg : Reg     generic map(
-                                    DATA_WIDTH  => 1
+    reg_2 : Reg1b               port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => mem_do_write_in,
+                                    output      => mem_do_write_out
+                                    );
+
+
+    reg_3 : Reg1b               port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => mem_do_read_in,
+                                    output      => mem_do_read_out
+                                    );
+
+    reg_4 : Reg                 generic map(
+                                    DATA_WIDTH  => 4
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => regfile_wr_en_in_sig,
-                                    output      => regfile_wr_en_out_sig
+                                    en          => en,
+                                    input       => mem_op_in,
+                                    output      => mem_op_out
                                     );
 
-    -- Register file address register
-    regfile_adr_reg : Reg       generic map(
-                                    DATA_WIDTH  => REGFILE_ADR_WIDTH
+    reg_5 : Reg1b               port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => do_jmp_in,
+                                    output      => do_jmp_out
+                                    );
+
+
+    reg_6 : Reg1b               port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => do_br_in,
+                                    output      => do_br_out
+                                    );
+
+    reg_7 : Reg1b               port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => alu_op1_ctrl_in,
+                                    output      => alu_op1_ctrl_out
+                                    );
+
+    reg_8 : Reg1b               port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => alu_op2_ctrl_in,
+                                    output      => alu_op2_ctrl_out
+                                    );
+
+    reg_9 : Reg                 generic map(
+                                    DATA_WIDTH  => 5
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => regfile_adr_in,
-                                    output      => regfile_adr_out
+                                    en          => en,
+                                    input       => alu_ctrl_in,
+                                    output      => alu_ctrl_out
                                     );
 
-
-    -- Data memory write enable register
-    mem_wr_en_reg : Reg         generic map(
-                                    DATA_WIDTH  => 1
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => mem_wr_en_in_sig,
-                                    output      => mem_wr_en_out_sig
-                                    );
-
-    -- Data memory read enable register
-    mem_rd_en_reg : Reg         generic map(
-                                    DATA_WIDTH  => 1
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => mem_rd_en_in_sig,
-                                    output      => mem_rd_en_out_sig
-                                    );
-
-    -- Branch register
-    branch_reg : Reg            generic map(
-                                    DATA_WIDTH  => 1
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => branch_in_sig,
-                                    output      => branch_out_sig
-                                    );
-
-
-    -- ALU operation register
-    alu_op_reg : Reg            generic map(
-                                    DATA_WIDTH  => ALU_OP_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => alu_op_in,
-                                    output      => alu_op_out
-                                    );
-
-    -- ALU source select register
-    alu_src_sel_reg : Reg       generic map(
-                                    DATA_WIDTH  => ALU_SRC_SEL_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => alu_src_sel_in,
-                                    output      => alu_src_sel_out
-                                    );
-
-    -- PC address register
-    pc_adr_reg : Reg            generic map(
-                                    DATA_WIDTH  => ADR_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => pc_adr_in,
-                                    output      => pc_adr_out
-                                    );
-
-    -- Operand 1 register
-    op1_reg : Reg               generic map(
-                                    DATA_WIDTH  => DATA_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => op1_in,
-                                    output      => op1_out
-                                    );
-
-    -- Operand 2 register
-    op2_reg : Reg               generic map(
-                                    DATA_WIDTH  => DATA_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => op2_in,
-                                    output      => op2_out
-                                    );
-
-    -- Immediate generator register
-    imm_gen_reg : Reg           generic map(
-                                    DATA_WIDTH  => ADR_WIDTH
-                                    )
-                                port map(
-                                    clk         => clk,
-                                    rst         => rst,
-                                    en          => '1',
-                                    input       => imm_gen_in,
-                                    output      => imm_gen_out
-                                    );
-
-    -- func3 register
-    func3_reg : Reg             generic map(
+    reg_10 : Reg                generic map(
                                     DATA_WIDTH  => 3
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => func3_in,
-                                    output      => func3_out
+                                    en          => en,
+                                    input       => br_op_in,
+                                    output      => br_op_out
                                     );
 
-    -- func7 register
-    func7_reg : Reg             generic map(
-                                    DATA_WIDTH  => 7
+    reg_11 : Reg                generic map(
+                                    DATA_WIDTH  => ADR_WIDTH
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => func7_in,
-                                    output      => func7_out
+                                    en          => en,
+                                    input       => pc4_in,
+                                    output      => pc4_out
                                     );
 
-    -- RS1 register
-    rs1_reg : Reg               generic map(
+    reg_12 : Reg                generic map(
+                                    DATA_WIDTH  => ADR_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => pc_in,
+                                    output      => pc_out
+                                    );
+
+    reg_13 : Reg                generic map(
+                                    DATA_WIDTH  => DATA_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => r1_in,
+                                    output      => r1_out
+                                    );
+
+    reg_14 : Reg                generic map(
+                                    DATA_WIDTH  => DATA_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => r2_in,
+                                    output      => r2_out
+                                    );
+
+    reg_15 : Reg                generic map(
+                                    DATA_WIDTH  => DATA_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => imm_in,
+                                    output      => imm_out
+                                    );
+
+    reg_16 : Reg                generic map(
                                     DATA_WIDTH  => REGFILE_ADR_WIDTH
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => rs1_in,
-                                    output      => rs1_out
+                                    en          => en,
+                                    input       => rd_reg1_idx_in,
+                                    output      => rd_reg1_idx_out
                                     );
 
-    -- RS2 register
-    rs2_reg : Reg               generic map(
+    reg_17 : Reg                generic map(
                                     DATA_WIDTH  => REGFILE_ADR_WIDTH
                                     )
                                 port map(
                                     clk         => clk,
                                     rst         => rst,
-                                    en          => '1',
-                                    input       => rs2_in,
-                                    output      => rs2_out
+                                    en          => en,
+                                    input       => rd_reg2_idx_in,
+                                    output      => rd_reg2_idx_out
+                                    );
+
+    reg_18 : Reg                generic map(
+                                    DATA_WIDTH  => REGFILE_ADR_WIDTH
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => wr_reg_idx_in,
+                                    output      => wr_reg_idx_out
+                                    );
+
+    reg_19 : Reg                generic map(
+                                    DATA_WIDTH  => 6
+                                    )
+                                port map(
+                                    clk         => clk,
+                                    rst         => rst,
+                                    en          => en,
+                                    input       => instr_id_in,
+                                    output      => instr_id_out
                                     );
 
 end behavior;

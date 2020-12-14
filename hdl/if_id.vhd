@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.31
+--! \version 0.0.39
 --! 
 --! \date 2020/11/28
 --! 
@@ -36,21 +36,20 @@ library ieee;
 
 entity IF_ID is
     generic(
-        DATA_WIDTH          : natural := 32;                                --! Data width in bits.
-        ADR_WIDTH           : natural := 64                                 --! Address width in bits.
+        DATA_WIDTH  : natural := 32;                                --! Data width in bits.
+        ADR_WIDTH   : natural := 64                                 --! Address width in bits.
         );
     port(
-        clk                 : in std_logic;                                 --! Clock input.
-        rst                 : in std_logic;                                 --! Reset signal.
-        en                  : in std_logic;                                 --! Enable signal.
+        clk         : in std_logic;                                 --! Clock input.
+        rst         : in std_logic;                                 --! Reset signal.
+        en          : in std_logic;                                 --! Enable signal.
 
-        -- EX
-        pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
-        pc_adr_out          : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! PC address output.
-
-        -- ID
-        inst_in             : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction input.
-        inst_out            : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Instruction output.
+        pc4_in      : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Next PC address input.
+        pc_in       : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
+        instr_in    : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction input.
+        pc4_out     : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! Next PC address output.
+        pc_out      : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! PC address output.
+        instr_out   : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Instruction output.
         );
 end IF_ID;
 
@@ -71,28 +70,37 @@ architecture behavior of IF_ID is
 
 begin
 
-    -- PC address register
-    pc_adr_reg : Reg    generic map(
+    reg_0 : Reg         generic map(
                             DATA_WIDTH  => ADR_WIDTH
                             )
                         port map(
                             clk         => clk,
                             rst         => rst,
                             en          => en,
-                            input       => pc_adr_in,
-                            output      => pc_adr_out
+                            input       => pc4_in,
+                            output      => pc4_out
                             );
 
-    -- Instruction register
-    inst_reg : Reg      generic map(
+    reg_1 : Reg         generic map(
+                            DATA_WIDTH  => ADR_WIDTH
+                            )
+                        port map(
+                            clk         => clk,
+                            rst         => rst,
+                            en          => en,
+                            input       => pc_in,
+                            output      => pc_out
+                            );
+
+    reg_2 : Reg         generic map(
                             DATA_WIDTH  => DATA_WIDTH
                             )
                         port map(
                             clk         => clk,
                             rst         => rst,
                             en          => en,
-                            input       => inst_in,
-                            output      => inst_out
+                            input       => instr_in,
+                            output      => instr_out
                             );
 
 end behavior;
