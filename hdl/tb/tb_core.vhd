@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.23
+--! \version 0.0.41
 --! 
 --! \date 2020/11/23
 --! 
@@ -48,11 +48,10 @@ architecture behavior of TB_Core is
     component Core
         generic(
             DATA_WIDTH      : natural := 32;                        --! Data width in bits.
-            MEM_ADR_WIDTH   : natural := 64;                        --! Memory address width in bits.
+            MEM_ADR_WIDTH   : natural := 32;                        --! Memory address width in bits.
             IMEM_SIZE_BYTES : natural := 1024;                      --! Instruction memory size in bytes.
             DMEM_SIZE_BYTES : natural := 8*1024;                    --! Data memory in bytes.
-            PROGRAM_FILE    : string := "program.hex";              --! Instruction file.
-            DEBUG_MODE      : boolean := false                      --! Debug mode flag.
+            PROGRAM_FILE    : string := "program.hex"               --! Instruction file.
             );
         port(
             clk : in std_logic;                                     --! Clock source.
@@ -72,11 +71,10 @@ begin
 
     dut : Core     generic map(
                         DATA_WIDTH      => DATA_WIDTH,
-                        MEM_ADR_WIDTH   => 64,
+                        MEM_ADR_WIDTH   => 32,
                         IMEM_SIZE_BYTES => 1024,
-                        DMEM_SIZE_BYTES => 8*1024,
-                        PROGRAM_FILE    => "program.hex",
-                        DEBUG_MODE      => false
+                        DMEM_SIZE_BYTES => 75*1024,
+                        PROGRAM_FILE    => "program.hex"
                         )
                     port map(
                         clk             => clk_sig,
@@ -85,8 +83,8 @@ begin
 
     process is
     begin
-        wait for 450 ns;
-        assert false report "Test completed with success!" severity note;
+        wait for 750 ns;
+        assert false report "Test completed with SUCCESS!" severity note;
         wait;
     end process;
 

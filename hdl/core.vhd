@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.34
+--! \version 0.0.41
 --! 
 --! \date 2020/11/22
 --! 
@@ -38,12 +38,11 @@ library ieee;
 entity Core is
     generic(
         DATA_WIDTH      : natural := 32;                                --! Data width in bits.
-        MEM_ADR_WIDTH   : natural := 64;                                --! Memory address width in bits.
+        MEM_ADR_WIDTH   : natural := 32;                                --! Memory address width in bits.
         RF_ADR_WIDTH    : natural := 5;                                 --! Register file address width in bits.
         IMEM_SIZE_BYTES : natural := 1024;                              --! Instruction memory size in bytes.
         DMEM_SIZE_BYTES : natural := 8*1024;                            --! Data memory in bytes.
-        PROGRAM_FILE    : string := "program.hex";                      --! Instruction file.
-        DEBUG_MODE      : boolean := false                              --! Debug mode flag.
+        PROGRAM_FILE    : string := "program.hex"                       --! Instruction file.
         );
     port(
         clk : in std_logic;                                             --! Clock source.
@@ -58,32 +57,50 @@ architecture behavior of Core is
             RF_ADR_WIDTH        : natural := 5                                  --! Regfile address width in bits.
             );
         port(
-            if_id_rs1           : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! IF/ID RS1.
-            if_id_rs2           : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! IF/ID RS2.
-            id_ex_rd            : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RD.
-            id_ex_dmem_rd_en    : in std_logic;                                 --! ID/EX data memory read enable.
-            pc_wr_en            : out std_logic;                                --! PC enable.
-            if_id_wr_en         : out std_logic;                                --! IF/ID enable.
-            ctrl_mux_sel        : out std_logic                                 --! Controller mux selection.
+            ex_do_mem_read_en   : in std_logic;                                 --! .
+            ex_reg_wr_idx       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! .
+            instr_id            : in std_logic_vector(5 downto 0);              --! Instruction ID.
+            id_reg1_idx         : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! .
+            id_reg2_idx         : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! .
+            mem_do_reg_write    : in std_logic;                                 --! .
+            wb_do_reg_write     : in std_logic;                                 --! .
+            hazard_id_ex_en     : out std_logic;                                --! ID/EX enable.
+            hazard_fe_en        : out std_logic;                                --! PC enable.
+            hazard_ex_mem_clear : out std_logic                                 --! EX/MEM clear.
             );
+    end component;
+
+    component Decode
+        generic(
+            DATA_WIDTH  : natural := 32                                 --! Data width in bits.
+            );
+        port(
+            instr       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction.
+            r1_idx      : out std_logic_vector(4 downto 0);             --! Register 1 index.
+            r2_idx      : out std_logic_vector(4 downto 0);             --! Register 2 index.
+            wr_idx      : out std_logic_vector(4 downto 0);             --! Write register index.
+            instr_id    : out std_logic_vector(5 downto 0)              --! Instruction ID.
+        );
     end component;
 
     component Controller
         generic(
-            DATA_WIDTH  : natural := 32;                                --! Data width in bits.
-            DEBUG_MODE  : boolean := false                              --! Debug mode flag.
+            DATA_WIDTH          : natural := 32                         --! Data width in bits.
             );
         port(
-            opcode      : in std_logic_vector(6 downto 0);              --! Opcode.
-            func3       : in std_logic_vector(2 downto 0);              --! func3.
-            func7       : in std_logic_vector(6 downto 0);              --! func7.
-            reg_write   : out std_logic;                                --! Register write enable.
-            alu_src     : out std_logic;                                --! ALU source selector.
-            alu_op      : out std_logic_vector(1 downto 0);             --! ALU operation code.
-            dmem_wr_en  : out std_logic;                                --! Data memory write enable.
-            dmem_rd_en  : out std_logic;                                --! Data memory read enable.
-            mem_to_reg  : out std_logic;                                --! Data memory to register source selector.
-            branch      : out std_logic                                 --! Branch selector.
+            instr_id            : in std_logic_vector(5 downto 0);      --! Instruction ID.
+            reg_do_write_ctrl   : out std_logic;                        --! Register write enable.
+            reg_wr_src_ctrl     : out std_logic_vector(1 downto 0);     --! Register write source.
+            mem_do_write_ctrl   : out std_logic;                        --! Data memory write enable.
+            mem_do_read_ctrl    : out std_logic;                        --! Data memory read enable.
+            mem_ctrl            : out std_logic_vector(3 downto 0);     --! Data memory control.
+            do_jump             : out std_logic;                        --! Jump enable.
+
+            do_branch           : out std_logic;                        --! Branch enable.
+            alu_op1_ctrl        : out std_logic;                        --! ALU op1 control.
+            alu_op2_ctrl        : out std_Logic;                        --! ALU op2 control.
+            alu_ctrl            : out std_logic_vector(4 downto 0);     --! ALU control.
+            comp_ctrl           : out std_logic_vector(2 downto 0)      --! Comp control.
             );
     end component;
 
@@ -114,7 +131,7 @@ architecture behavior of Core is
     component ROM
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.
-            ADR_WIDTH   : natural := 64;                                --! Address width in bits.
+            ADR_WIDTH   : natural := 32;                                --! Address width in bits.
             SIZE        : natural := 1024;                              --! Memory size in bytes.
             MEM_FILE    : string := "rom.hex"                           --! File name of the memory file.
             );
@@ -132,13 +149,13 @@ architecture behavior of Core is
             );
         port(
             clk         : in std_logic;                                 --! Clock input.
-            rs1         : in std_logic_vector(4 downto 0);              --! First source register number.
-            rs2         : in std_logic_vector(4 downto 0);              --! Second source register number.
-            rd          : in std_logic_vector(4 downto 0);              --! Destination register number.
+            r1_idx      : in std_logic_vector(4 downto 0);              --! First source register number.
+            r2_idx      : in std_logic_vector(4 downto 0);              --! Second source register number.
+            wr_idx      : in std_logic_vector(4 downto 0);              --! Destination register number.
             wr_en       : in std_logic;                                 --! Write register enable.
-            data_write  : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data to write into register.
-            op1         : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
-            op2         : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operand 2.
+            wr_data     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data to write into register.
+            reg1        : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
+            reg2        : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operand 2.
             );
     end component;
 
@@ -147,8 +164,9 @@ architecture behavior of Core is
             DATA_WIDTH : natural := 32                                  --! Data width in bits.
             );
         port(
-            inst    : in std_logic_vector(DATA_WIDTH-1 downto 0);       --! Instruction.
-            imm     : out std_logic_vector((2*DATA_WIDTH)-1 downto 0)   --! Generated immediate.
+            instr       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction.
+            instr_id    : in std_logic_vector(5 downto 0);              --! Instruction ID.
+            imm         : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Generated immediate.
             );
     end component;
 
@@ -157,53 +175,52 @@ architecture behavior of Core is
             DATA_WIDTH  : natural := 32                                 --! Data width in bits.
             );
         port(
-            op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
-            op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
-            operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
-            result      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Opeartion output.
-            zero        : out std_logic                                 --! Zero result flag.
+            ctrl    : in  std_logic_vector(4 downto 0);                 --! Operation control.
+            op1     : in  std_logic_vector(DATA_WIDTH-1 downto 0);      --! Operand 1.
+            op2     : in  std_logic_vector(DATA_WIDTH-1 downto 0);      --! Operand 2.
+            res     : out std_logic_vector(DATA_WIDTH-1 downto 0)       --! Operation output.
             );
     end component;
 
-    component ALUCtrl
+    component Branch
         generic(
-            DATA_WIDTH : natural := 32                                  --! Data width in bits.
+            DATA_WIDTH  : natural := 32                                 --! Data width in bits.
             );
         port(
-            clk         : in std_logic;                                 --! Clock signal.
-            func3       : in std_logic_vector(2 downto 0);              --! 3-bit function code.
-            func7       : in std_logic_vector(6 downto 0);              --! 7-bit function code.
-            alu_op      : in std_logic_vector(1 downto 0);              --! ALU operation.
-            alu_ctrl    : out std_logic_vector(3 downto 0)              --! ALU operation code.
+            comp_ctrl   : in std_logic_vector(2 downto 0);              --! Comp control.
+            op1         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Operator 1.
+            op2         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Operator 2.
+            res         : out std_logic                                 --! Result.
             );
     end component;
 
     component ForwardingUnit
         generic(
-            RF_ADR_WIDTH    : natural := 5                                  --! Regfile address width in bits.
+            RF_ADR_WIDTH : natural := 5                                                 --! Regfile address width in bits.
             );
         port(
-            id_ex_rs1       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RS1.
-            id_ex_rs2       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX RS2.
-            ex_mem_rd       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! EX/MEM RD.
-            mem_wb_rd       : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! MEM/WB RD.
-            ex_mem_rf_wr_en : in std_logic;                                 --! EX/MEM register file write enable.
-            mem_wb_rf_wr_en : in std_logic;                                 --! MEM/WB register file write enable.
-            fwd_a           : out std_logic_vector(1 downto 0);             --! Forward A.
-            fwd_b           : out std_logic_vector(1 downto 0)              --! Forward B.
+            id_reg1_idx                 : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX register 1.
+            id_reg2_idx                 : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! ID/EX register 2.
+            wb_reg_wr_en                : in std_logic;                                 --! Write register enable.
+            wb_reg_wr_idx               : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! WB write register index.
+            mem_reg_wr_en               : in std_logic;                                 --! MEM write register enable.
+            mem_reg_wr_idx              : in std_logic_vector(RF_ADR_WIDTH-1 downto 0); --! MEM write register index.
+            alu_reg1_forwarding_ctrl    : out std_logic_vector(1 downto 0);             --! ALU op1 source control.
+            alu_reg2_forwarding_ctrl    : out std_logic_vector(1 downto 0)              --! ALU op2 source control.
             );
     end component;
 
     component RAM
         generic(
             DATA_WIDTH  : natural := 32;                                --! Data width in bits.
+            ADR_WIDTH   : natural := 32;                                --! Address width in bits.
             SIZE        : natural := 1024                               --! Memory size in bytes.
             );
         port(
             clk         : in std_logic;                                 --! Clock input.
             wr_en       : in std_logic;                                 --! Write enable.
-            rd_en       : in std_logic;                                 --! Read enable.
-            adr         : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Memory address to access.
+            op          : in std_logic_vector(3 downto 0);              --! Memory operation.
+            adr         : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Memory address to access.
             data_in     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             data_out    : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
             );
@@ -236,74 +253,75 @@ architecture behavior of Core is
 
     component IF_ID
         generic(
-            DATA_WIDTH          : natural := 32;                                --! Data width in bits.
-            ADR_WIDTH           : natural := 64                                 --! Address width in bits.
+            DATA_WIDTH  : natural := 32;                                --! Data width in bits.
+            ADR_WIDTH   : natural := 64                                 --! Address width in bits.
             );
         port(
-            clk                 : in std_logic;                                 --! Clock input.
-            rst                 : in std_logic;                                 --! Reset signal.
-            en                  : in std_logic;                                 --! Enable signal.
+            clk         : in std_logic;                                 --! Clock input.
+            rst         : in std_logic;                                 --! Reset signal.
+            en          : in std_logic;                                 --! Enable signal.
 
-            -- EX
-            pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
-            pc_adr_out          : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! PC address output.
-
-            -- ID
-            inst_in             : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction input.
-            inst_out            : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Instruction output.
+            pc4_in      : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Next PC address input.
+            pc_in       : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! PC address input.
+            instr_in    : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction input.
+            pc4_out     : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! Next PC address output.
+            pc_out      : out std_logic_vector(ADR_WIDTH-1 downto 0);   --! PC address output.
+            instr_out   : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Instruction output.
             );
     end component;
 
     component ID_EX
         generic(
             DATA_WIDTH          : natural := 32;                                        --! Data width in bits.
-            ADR_WIDTH           : natural := 64;                                        --! Address width in bits.
-            WB_MUX_SEL_WIDTH    : natural := 1;                                         --! WB mux select width in bits.
-            REGFILE_ADR_WIDTH   : natural := 5;                                         --! Register file address width in bits
-            ALU_OP_WIDTH        : natural := 2;                                         --! ALU operation width in bits.
-            ALU_SRC_SEL_WIDTH   : natural := 1                                          --! ALU source mux select width in bits.
+            ADR_WIDTH           : natural := 32;                                        --! Address width in bits.
+            REGFILE_ADR_WIDTH   : natural := 5                                          --! Register file address width in bits
             );
         port(
             clk                 : in std_logic;                                         --! Clock input.
             rst                 : in std_logic;                                         --! Reset signal.
+            en                  : in std_logic;                                         --! Enable signal.
 
-            -- WB
-            wb_sel_in           : in std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);     --! WB mux select input.
-            wb_sel_out          : out std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);    --! WB mux select output.
-            regfile_wr_en_in    : in std_logic;                                         --! Register file write enable input.
-            regfile_wr_en_out   : out std_logic;                                        --! Register file write enable output.
-            regfile_adr_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! Register file address input.
-            regfile_adr_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! Register file address output.
+            reg_do_write_in     : in std_logic;                                         --! .
+            reg_wr_src_ctrl_in  : in std_logic_vector(1 downto 0);                      --! .
+            mem_do_write_in     : in std_logic;                                         --! .
+            mem_do_read_in      : in std_logic;                                         --! .
+            mem_op_in           : in std_logic_vector(3 downto 0);                      --! .
+            do_jmp_in           : in std_logic;                                         --! .
+            do_br_in            : in std_logic;                                         --! .
+            alu_op1_ctrl_in     : in std_logic;                                         --! .
+            alu_op2_ctrl_in     : in std_logic;                                         --! .
+            alu_ctrl_in         : in std_logic_vector(4 downto 0);                      --! .
+            br_op_in            : in std_logic_vector(2 downto 0);                      --! .
+            pc4_in              : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! .
+            pc_in               : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! .
+            r1_in               : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            r2_in               : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            imm_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            rd_reg1_idx_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+            rd_reg2_idx_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+            wr_reg_idx_in       : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+            instr_id_in         : in std_logic_vector(5 downto 0);                      --! .
 
-            -- MEM
-            mem_wr_en_in        : in std_logic;                                         --! Data memory write enable input.
-            mem_wr_en_out       : out std_logic;                                        --! Data memory write enable output.
-            mem_rd_en_in        : in std_logic;                                         --! Data memory read enable input.
-            mem_rd_en_out       : out std_logic;                                        --! Data memory read enable output.
-            branch_in           : in std_logic;                                         --! Branch input.
-            branch_out          : out std_logic;                                        --! Branch output.
-
-            -- EX
-            alu_op_in           : in std_logic_vector(ALU_OP_WIDTH-1 downto 0);         --! ALU operation input.
-            alu_op_out          : out std_logic_vector(ALU_OP_WIDTH-1 downto 0);        --! ALU operation output.
-            alu_src_sel_in      : in std_logic_vector(ALU_SRC_SEL_WIDTH-1 downto 0);    --! ALU source select input.
-            alu_src_sel_out     : out std_logic_vector(ALU_SRC_SEL_WIDTH-1 downto 0);   --! ALU source select output.
-            pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! PC address input.
-            pc_adr_out          : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! PC address output.
-            op1_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Operand 1 input.
-            op1_out             : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! Operand 1 output.
-            op2_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Operand 2 input.
-            op2_out             : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! Operand 2 output.
-            imm_gen_in          : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! Immediate generator input.
-            imm_gen_out         : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! Immediate generator output.
-            func3_in            : in std_logic_vector(2 downto 0);                      --! func3 input.
-            func3_out           : out std_logic_vector(2 downto 0);                     --! func3 output.
-            func7_in            : in std_logic_vector(6 downto 0);                      --! func7 input.
-            func7_out           : out std_logic_vector(6 downto 0);                     --! func7 output.
-            rs1_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS1 input.
-            rs1_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! RS1 output.
-            rs2_in              : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! RS2 input.
-            rs2_out             : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0)    --! RS2 output.
+            reg_do_write_out    : out std_logic;                                        --! .
+            reg_wr_src_ctrl_out : out std_logic_vector(1 downto 0);                     --! .
+            mem_do_write_out    : out std_logic;                                        --! .
+            mem_do_read_out     : out std_logic;                                        --! .
+            mem_op_out          : out std_logic_vector(3 downto 0);                     --! .
+            do_jmp_out          : out std_logic;                                        --! .
+            do_br_out           : out std_logic;                                        --! .
+            alu_op1_ctrl_out    : out std_logic;                                        --! .
+            alu_op2_ctrl_out    : out std_logic;                                        --! .
+            alu_ctrl_out        : out std_logic_vector(4 downto 0);                     --! .
+            br_op_out           : out std_logic_vector(2 downto 0);                     --! .
+            pc4_out             : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! .
+            pc_out              : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! .
+            r1_out              : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            r2_out              : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            imm_out             : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            rd_reg1_idx_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! .
+            rd_reg2_idx_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! .
+            wr_reg_idx_out      : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! .
+            instr_id_out        : out std_logic_vector(5 downto 0)                      --! .
             );
     end component;
 
@@ -311,36 +329,30 @@ architecture behavior of Core is
         generic(
             DATA_WIDTH          : natural := 32;                                        --! Data width in bits.
             ADR_WIDTH           : natural := 64;                                        --! Address width in bits.
-            WB_MUX_SEL_WIDTH    : natural := 1;                                         --! WB mux select width in bits.
             REGFILE_ADR_WIDTH   : natural := 5                                          --! Register file address width in bits
             );
         port(
             clk                 : in std_logic;                                         --! Clock input.
             rst                 : in std_logic;                                         --! Reset signal.
+            en                  : in std_logic;                                         --! Enable signal.
 
-            -- WB
-            wb_sel_in           : in std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);     --! WB mux select input.
-            wb_sel_out          : out std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);    --! WB mux select output.
-            regfile_wr_en_in    : in std_logic;                                         --! Register file write enable input.
-            regfile_wr_en_out   : out std_logic;                                        --! Register file write enable output.
-            regfile_adr_in      : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! Register file address input.
-            regfile_adr_out     : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! Register file address output.
+            reg_do_write_in     : in std_logic;                                         --! .
+            reg_wr_src_ctrl_in  : in std_logic_vector(1 downto 0);                      --! .
+            mem_do_write_in     : in std_logic;                                         --! .
+            mem_op_in           : in std_logic_vector(3 downto 0);                      --! .
+            pc4_in              : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! .
+            alures_in           : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            r2_in               : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            wr_reg_idx_in       : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
 
-            -- MEM
-            mem_wr_en_in        : in std_logic;                                         --! Data memory write enable input.
-            mem_wr_en_out       : out std_logic;                                        --! Data memory write enable output.
-            mem_rd_en_in        : in std_logic;                                         --! Data memory read enable input.
-            mem_rd_en_out       : out std_logic;                                        --! Data memory read enable output.
-            branch_in           : in std_logic;                                         --! Branch input.
-            branch_out          : out std_logic;                                        --! Branch output.
-            pc_adr_in           : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! PC address input.
-            pc_adr_out          : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! PC address output.
-            alu_zero_in         : in std_logic;                                         --! ALU zero flag input.
-            alu_zero_out        : out std_logic;                                        --! ALU zero flag output.
-            alu_res_in          : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! ALU result input.
-            alu_res_out         : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! ALU result output.
-            op2_in              : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Operand 2 input.
-            op2_out             : out std_logic_vector(DATA_WIDTH-1 downto 0)           --! Operand 2 output.
+            reg_do_write_out    : out std_logic;                                        --! .
+            reg_wr_src_ctrl_out : out std_logic_vector(1 downto 0);                     --! .
+            mem_do_write_out    : out std_logic;                                        --! .
+            mem_op_out          : out std_logic_vector(3 downto 0);                     --! .
+            pc4_out             : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! .
+            alures_out          : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            r2_out              : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            wr_reg_idx_out      : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0)    --! .
             );
     end component;
 
@@ -348,104 +360,122 @@ architecture behavior of Core is
         generic(
             DATA_WIDTH          : natural := 32;                                        --! Data width in bits.
             ADR_WIDTH           : natural := 64;                                        --! Address width in bits.
-            WB_MUX_SEL_WIDTH    : natural := 1;                                         --! WB mux select width in bits.
             REGFILE_ADR_WIDTH   : natural := 5                                          --! Register file address width in bits
             );
         port(
             clk                 : in std_logic;                                         --! Clock input.
             rst                 : in std_logic;                                         --! Reset signal.
-            wb_sel_in           : in std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);     --! WB mux select input.
-            wb_sel_out          : out std_logic_vector(WB_MUX_SEL_WIDTH-1 downto 0);    --! WB mux select output.
-            regfile_wr_en_in    : in std_logic;                                         --! Register file write enable input.
-            regfile_wr_en_out   : out std_logic;                                        --! Register file write enable output.
-            regfile_wr_adr_in   : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! Register file write address input.
-            regfile_wr_adr_out  : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);   --! Register file write address output.
-            alu_res_in          : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! ALU result input.
-            alu_res_out         : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! ALU result output.
-            data_mem_in         : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! Data memory input.
-            data_mem_out        : out std_logic_vector(DATA_WIDTH-1 downto 0)           --! Data memory output.
+            en                  : in std_logic;                                         --! Enable signal.
+
+            reg_do_write_in     : in std_logic;                                         --! .
+            reg_wr_src_ctrl_in  : in std_logic_vector(1 downto 0);                      --! .
+            pc4_in              : in std_logic_vector(ADR_WIDTH-1 downto 0);            --! .
+            alures_in           : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            mem_read_in         : in std_logic_vector(DATA_WIDTH-1 downto 0);           --! .
+            wr_reg_idx_in       : in std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0);    --! .
+
+            reg_do_write_out    : out std_logic;                                        --! .
+            reg_wr_src_ctrl_out : out std_logic_vector(1 downto 0);                     --! .
+            pc4_out             : out std_logic_vector(ADR_WIDTH-1 downto 0);           --! .
+            alures_out          : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            mem_read_out        : out std_logic_vector(DATA_WIDTH-1 downto 0);          --! .
+            wr_reg_idx_out      : out std_logic_vector(REGFILE_ADR_WIDTH-1 downto 0)    --! .
             );
     end component;
 
     -- General signals
-    signal clk_sig              : std_logic := '0';
-    signal rst_sig              : std_logic := '1';
-    signal sig_006              : std_logic := '0';
-    signal sig_026              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
-    signal sig_025              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
+    signal clk_sig                  : std_logic                                         := '0';
+    signal rst_sig                  : std_logic                                         := '0';
 
     -- IF signals
-    signal pc_adr_sig           : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal inst_sig             : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal pc_add_res_sig       : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal pc_next_adr_sig      : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal pc_in_sig            : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
+    signal pc_adderres_sig          : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal pc_next_adr_sig          : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal pc_sig                   : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal instr_sig                : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
 
     -- ID signals
-    signal inst_if_id_sig       : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal pc_adr_if_id_sig     : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal regfile_wr_en_sig    : std_logic                                     := '0';
-    signal op1_sig              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal op2_sig              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal imm_gen_sig          : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal sig_040              : std_logic                                     := '0';
-    signal sig_041              : std_logic                                     := '0';
-    signal sig_042              : std_logic                                     := '0';
-    signal sig_043              : std_logic_vector(7 downto 0)                  := (others => '0');
-    signal sig_044              : std_logic_vector(7 downto 0)                  := (others => '0');
+    signal pc4_id_sig               : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal pc_id_sig                : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal instr_id_sig             : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal r1_reg_idx_sig           : std_logic_vector(RF_ADR_WIDTH-1 downto 0)         := (others => '0');
+    signal r2_reg_idx_sig           : std_logic_vector(RF_ADR_WIDTH-1 downto 0)         := (others => '0');
+    signal wd_reg_idx_sig           : std_logic_vector(RF_ADR_WIDTH-1 downto 0)         := (others => '0');
+    signal instr_id_id_sig          : std_logic_vector(5 downto 0)                      := (others => '0');
+    signal imm_sig                  : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal r1_sig                   : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal r2_sig                   : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal reg_do_write_ctrl_sig    : std_logic                                         := '0';
+    signal reg_wr_src_ctrl_sig      : std_logic_vector(1 downto 0)                      := (others => '0');
+    signal mem_do_write_ctrl_sig    : std_logic                                         := '0';
+    signal mem_do_read_ctrl_sig     : std_logic                                         := '0';
+    signal mem_ctrl_sig             : std_logic_vector(3 downto 0)                      := (others => '0');
+    signal do_jump_sig              : std_logic                                         := '0';
+    signal do_branch_sig            : std_logic                                         := '0';
+    signal alu_op1_ctrl_sig         : std_logic                                         := '0';
+    signal alu_op2_ctrl_sig         : std_logic                                         := '0';
+    signal alu_ctrl_sig             : std_logic_vector(4 downto 0)                      := (others => '0');
+    signal comp_ctrl_sig            : std_logic_vector(2 downto 0)                      := (others => '0');
 
     -- EX signals
-    signal sig_001              : std_logic                                     := '0';
-    signal sig_002              : std_logic_vector(0 downto 0)                  := (others => '0');
-    signal sig_008              : std_logic_vector(4 downto 0)                  := (others => '0');
-    signal sig_016              : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal sig_017              : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal sig_022              : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal sig_014              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal sig_013              : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)    := (others => '0');
-    signal sig_010              : std_logic_vector(0 downto 0)                  := (others => '0');
-    signal sig_015              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal sig_011              : std_logic_vector(3 downto 0)                  := (others => '0');
-    signal sig_012              : std_logic_vector(2 downto 0)                  := (others => '0');
-    signal sig_033              : std_logic_vector(6 downto 0)                  := (others => '0');
-    signal sig_023              : std_logic                                     := '0';
-    signal sig_024              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal sig_018              : std_logic                                     := '0';
-    signal sig_019              : std_logic                                     := '0';
-    signal sig_020              : std_logic                                     := '0';
-    signal sig_034              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
-    signal sig_035              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
-    signal sig_036              : std_logic_vector(1 downto 0)                  := (others => '0');
-    signal sig_037              : std_logic_vector(1 downto 0)                  := (others => '0');
-    signal sig_038              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal sig_039              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
+    signal pc_sel_sig               : std_logic                                         := '0';
+    signal alures_sig               : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal hazard_fe_en_sig         : std_logic                                         := '0';
+    signal hazard_id_ex_en_sig      : std_logic                                         := '0';
+    signal r1_ex_sig                : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal reg_do_write_ex_sig      : std_logic                                         := '0';
+    signal reg_wr_src_ctrl_ex_sig   : std_logic_vector(1 downto 0)                      := (others => '0');
+    signal mem_do_write_ex_sig      : std_logic                                         := '0';
+    signal mem_do_read_ex_sig       : std_logic                                         := '0';
+    signal mem_op_ex_sig            : std_logic_vector(3 downto 0)                      := (others => '0');
+    signal do_jump_ex_sig           : std_logic                                         := '0';
+    signal do_br_ex_sig             : std_logic                                         := '0';
+    signal alu_op1_ctrl_ex_sig      : std_logic                                         := '0';
+    signal alu_op2_ctrl_ex_sig      : std_logic                                         := '0';
+    signal alu_ctrl_ex_sig          : std_logic_vector(4 downto 0)                      := (others => '0');
+    signal br_op_ex_sig             : std_logic_vector(2 downto 0)                      := (others => '0');
+    signal pc4_ex_sig               : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal pc_ex_sig                : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal r2_ex_sig                : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal imm_ex_sig               : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal rd_reg1_idx_ex_sig       : std_logic_vector(4 downto 0)                      := (others => '0');
+    signal wr_reg_idx_ex_sig        : std_logic_vector(4 downto 0)                      := (others => '0');
+    signal rd_reg2_idx_ex_sig       : std_logic_vector(4 downto 0)                      := (others => '0');
+    signal instr_id_ex_sig          : std_logic_vector(5 downto 0)                      := (others => '0');
+    signal alu_op1_sig              : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal alu_op2_sig              : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal branch_taken_sig         : std_logic                                         := '0';
+    signal r2_ex_op2_sig            : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal r1_ex_op1_sig            : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal alu_reg1_fwd_ctrl_sig    : std_logic_vector(1 downto 0)                      := (others => '0');
+    signal alu_reg2_fwd_ctrl_sig    : std_logic_vector(1 downto 0)                      := (others => '0');
+    signal wr_reg_idx_mem_sig       : std_logic_vector(RF_ADR_WIDTH-1 downto 0)         := (others => '0');
+    signal reg_do_write_mem_sig     : std_logic                                         := '0';
+    signal hazard_ex_mem_clear_sig  : std_logic                                         := '0';
 
     -- MEM signals
-    signal dmem_output_sig      : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal op2_ex_mem_sig       : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal alu_res_ex_mem_sig   : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal dmem_rden_ex_mem_sig : std_logic                                     := '0';
-    signal mem2reg_ex_mem_sig   : std_logic_vector(0 downto 0)                  := (others => '0');
-    signal rf_wr_en_ex_mem_sig  : std_logic                                     := '0';
-    signal sig_003              : std_logic                                     := '0';
-    signal sig_004              : std_logic                                     := '0';
-    signal sig_005              : std_logic                                     := '0';
-    signal sig_007              : std_logic_vector(RF_ADR_WIDTH-1 downto 0)     := (others => '0');
-    signal sig_021              : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal sig_009              : std_logic_vector(1 downto 0)                  := (others => '0');
+    signal alures_mem_sig           : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal reg_wr_src_ctrl_mem_sig  : std_logic_vector(1 downto 0)                      := (others => '0');
+    signal mem_do_write_mem_sig     : std_logic                                         := '0';
+    signal mem_op_mem_sig           : std_logic_vector(3 downto 0)                      := (others => '0');
+    signal pc4_mem_sig              : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
+    signal r2_mem_sig               : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal mem_data_sig             : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
 
     -- WB signals
-    signal dmem_out_mem_wb_sig  : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal alu_res_mem_wb_sig   : std_logic_vector(DATA_WIDTH-1 downto 0)       := (others => '0');
-    signal mem2reg_mem_wb_sig   : std_logic_vector(0 downto 0)                  := (others => '0');
+    signal reg_do_write_wb_sig      : std_logic                                         := '0';
+    signal wb_res_sig               : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal wr_reg_idx_wb_sig        : std_logic_vector(RF_ADR_WIDTH-1 downto 0)         := (others => '0');
+    signal reg_wr_src_ctrl_wb_sig   : std_logic_vector(1 downto 0)                      := (others => '0');
+    signal mem_read_wb_sig          : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal alures_wb_sig            : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
+    signal pc4_wb_sig               : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
 
 begin
 
     clk_sig <= clk;
     rst_sig <= rst;
 
-    sig_006 <= sig_004 and sig_005;
-    sig_017 <= sig_013(MEM_ADR_WIDTH-2 downto 0) & '0';
+    pc_sel_sig <= (do_br_ex_sig and branch_taken_sig) or do_jump_ex_sig;
 
     -- ##########################################################################
     -- ##########################################################################
@@ -453,15 +483,14 @@ begin
     -- ##########################################################################
     -- ##########################################################################
 
-
     pc_mux : Mux2x1      generic map(
                              DATA_WIDTH         => MEM_ADR_WIDTH
                              )
                          port map(
-                             input1             => pc_add_res_sig,
-                             input2             => pc_next_adr_sig,
-                             sel                => sig_006,
-                             output             => pc_in_sig
+                             input1             => pc_adderres_sig,
+                             input2             => alures_sig,
+                             sel                => pc_sel_sig,
+                             output             => pc_next_adr_sig
                              );
 
     pc : Reg           generic map(
@@ -470,29 +499,30 @@ begin
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
-                            en                  => sig_040,
-                            input               => pc_in_sig,
-                            output              => pc_adr_sig
+                            en                  => hazard_fe_en_sig,
+                            input               => pc_next_adr_sig,
+                            output              => pc_sig
                             );
 
     pc_add : Adder      generic map(
                             DATA_WIDTH          => MEM_ADR_WIDTH
                             )
                         port map(
-                            a                   => x"0000000000000004",
-                            b                   => pc_adr_sig,
-                            result              => pc_add_res_sig
+                            a                   => x"00000004",
+                            b                   => pc_sig,
+                            result              => pc_adderres_sig
                             );
 
     imem : ROM          generic map(
                             DATA_WIDTH          => DATA_WIDTH,
+                            ADR_WIDTH           => MEM_ADR_WIDTH,
                             SIZE                => IMEM_SIZE_BYTES,
                             MEM_FILE            => PROGRAM_FILE
                             )
                         port map(
                             clk                 => clk_sig,
-                            adr                 => pc_adr_sig,
-                            data_out            => inst_sig
+                            adr                 => pc_sig,
+                            data_out            => instr_sig
                             );
 
     if_id_reg : IF_ID   generic map(
@@ -502,11 +532,13 @@ begin
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
-                            en                  => sig_041,
-                            pc_adr_in           => pc_adr_sig,
-                            pc_adr_out          => pc_adr_if_id_sig,
-                            inst_in             => inst_sig,
-                            inst_out            => inst_if_id_sig
+                            en                  => '1',
+                            pc4_in              => pc_adderres_sig,
+                            pc_in               => pc_sig,
+                            instr_in            => instr_sig,
+                            pc4_out             => pc4_id_sig,
+                            pc_out              => pc_id_sig,
+                            instr_out           => instr_id_sig
                             );
 
     -- ##########################################################################
@@ -515,45 +547,34 @@ begin
     -- ##########################################################################
     -- ##########################################################################
 
-    h : HazardDetection generic map(
-                            RF_ADR_WIDTH        => RF_ADR_WIDTH
+    dec : Decode        generic map(
+                            DATA_WIDTH          => DATA_WIDTH
                             )
                         port map(
-                            if_id_rs1           => inst_if_id_sig(19 downto 15),
-                            if_id_rs2           => inst_if_id_sig(24 downto 20),
-                            id_ex_rd            => sig_008,
-                            id_ex_dmem_rd_en    => sig_019,
-                            pc_wr_en            => sig_040,
-                            if_id_wr_en         => sig_041,
-                            ctrl_mux_sel        => sig_042
+                            instr               => instr_id_sig,
+                            r1_idx              => r1_reg_idx_sig,
+                            r2_idx              => r2_reg_idx_sig,
+                            wr_idx              => wd_reg_idx_sig,
+                            instr_id            => instr_id_id_sig
                             );
 
     ctrl : Controller   generic map(
-                            DATA_WIDTH          => DATA_WIDTH,
-                            DEBUG_MODE          => DEBUG_MODE
+                            DATA_WIDTH          => DATA_WIDTH
                             )
                         port map(
-                            opcode              => inst_if_id_sig(6 downto 0),
-                            func3               => inst_if_id_sig(14 downto 12),
-                            func7               => inst_if_id_sig(31 downto 25),
-                            reg_write           => sig_043(7),
-                            alu_src             => sig_043(6),
-                            alu_op              => sig_043(5 downto 4),
-                            dmem_wr_en          => sig_043(3),
-                            dmem_rd_en          => sig_043(2),
-                            mem_to_reg          => sig_043(1),
-                            branch              => sig_043(0)
+                            instr_id            => instr_id_id_sig,
+                            reg_do_write_ctrl   => reg_do_write_ctrl_sig,
+                            reg_wr_src_ctrl     => reg_wr_src_ctrl_sig,
+                            mem_do_write_ctrl   => mem_do_write_ctrl_sig,
+                            mem_do_read_ctrl    => mem_do_read_ctrl_sig,
+                            mem_ctrl            => mem_ctrl_sig,
+                            do_jump             => do_jump_sig,
+                            do_branch           => do_branch_sig,
+                            alu_op1_ctrl        => alu_op1_ctrl_sig,
+                            alu_op2_ctrl        => alu_op2_ctrl_sig,
+                            alu_ctrl            => alu_ctrl_sig,
+                            comp_ctrl           => comp_ctrl_sig
                             );
-
-    ctrl_out : Mux2x1    generic map(
-                             DATA_WIDTH         => 8
-                             )
-                         port map(
-                             input1             => sig_043,
-                             input2             => "00000000",
-                             sel                => sig_042,
-                             output             => sig_044
-                             );
 
     regs : RegFile       generic map(
                              DATA_WIDTH         => DATA_WIDTH,
@@ -561,66 +582,74 @@ begin
                              )
                          port map(
                              clk                => clk_sig,
-                             rs1                => inst_if_id_sig(19 downto 15),
-                             rs2                => inst_if_id_sig(24 downto 20),
-                             rd                 => sig_026,
-                             wr_en              => regfile_wr_en_sig,
-                             data_write         => sig_025,
-                             op1                => op1_sig,
-                             op2                => op2_sig
+                             r1_idx             => r1_reg_idx_sig,
+                             r2_idx             => r2_reg_idx_sig,
+                             wr_idx             => wr_reg_idx_wb_sig,
+                             wr_en              => reg_do_write_wb_sig,
+                             wr_data            => wb_res_sig,
+                             reg1               => r1_sig,
+                             reg2               => r2_sig
                              );
 
     imm_g : ImmGen       generic map(
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             inst               => inst_if_id_sig,
-                             imm                => imm_gen_sig
+                             instr              => instr_id_sig,
+                             instr_id           => instr_id_id_sig,
+                             imm                => imm_sig
                              );
 
     id_ex_reg : ID_EX   generic map(
                             DATA_WIDTH          => DATA_WIDTH,
                             ADR_WIDTH           => MEM_ADR_WIDTH,
-                            WB_MUX_SEL_WIDTH    => 1,
-                            REGFILE_ADR_WIDTH   => RF_ADR_WIDTH,
-                            ALU_OP_WIDTH        => 2,
-                            ALU_SRC_SEL_WIDTH   => 1
+                            REGFILE_ADR_WIDTH   => RF_ADR_WIDTH
                             )
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
-                            wb_sel_in           => sig_044(1 downto 1),
-                            wb_sel_out          => sig_002,
-                            regfile_wr_en_in    => sig_044(7),
-                            regfile_wr_en_out   => sig_001,
-                            regfile_adr_in      => inst_if_id_sig(11 downto 7),
-                            regfile_adr_out     => sig_008,
-                            mem_wr_en_in        => sig_044(3),
-                            mem_wr_en_out       => sig_020,
-                            mem_rd_en_in        => sig_044(2),
-                            mem_rd_en_out       => sig_019,
-                            branch_in           => sig_044(0),
-                            branch_out          => sig_018,
-                            alu_op_in           => sig_044(5 downto 4),
-                            alu_op_out          => sig_009,
-                            alu_src_sel_in      => sig_044(6 downto 6),
-                            alu_src_sel_out     => sig_010,
-                            pc_adr_in           => pc_adr_if_id_sig,
-                            pc_adr_out          => sig_016,
-                            op1_in              => op1_sig,
-                            op1_out             => sig_015,
-                            op2_in              => op2_sig,
-                            op2_out             => sig_038,
-                            imm_gen_in          => imm_gen_sig,
-                            imm_gen_out         => sig_013,
-                            func3_in            => inst_if_id_sig(14 downto 12),
-                            func3_out           => sig_012,
-                            func7_in            => inst_if_id_sig(31 downto 25),
-                            func7_out           => sig_033,
-                            rs1_in              => inst_if_id_sig(19 downto 15),
-                            rs1_out             => sig_034,
-                            rs2_in              => inst_if_id_sig(24 downto 20),
-                            rs2_out             => sig_035
+                            en                  => hazard_id_ex_en_sig,
+                            reg_do_write_in     => reg_do_write_ctrl_sig,
+                            reg_wr_src_ctrl_in  => reg_wr_src_ctrl_sig,
+                            mem_do_write_in     => mem_do_write_ctrl_sig,
+                            mem_do_read_in      => mem_do_read_ctrl_sig,
+                            mem_op_in           => mem_ctrl_sig,
+                            do_jmp_in           => do_jump_sig,
+                            do_br_in            => do_branch_sig,
+                            alu_op1_ctrl_in     => alu_op1_ctrl_sig,
+                            alu_op2_ctrl_in     => alu_op2_ctrl_sig,
+                            alu_ctrl_in         => alu_ctrl_sig,
+                            br_op_in            => comp_ctrl_sig,
+                            pc4_in              => pc4_id_sig,
+                            pc_in               => pc_id_sig,
+                            r1_in               => r1_sig,
+                            r2_in               => r2_sig,
+                            imm_in              => imm_sig,
+                            rd_reg1_idx_in      => r1_reg_idx_sig,
+                            rd_reg2_idx_in      => r2_reg_idx_sig,
+                            wr_reg_idx_in       => wd_reg_idx_sig,
+                            instr_id_in         => instr_id_id_sig,
+
+                            reg_do_write_out    => reg_do_write_ex_sig,
+                            reg_wr_src_ctrl_out => reg_wr_src_ctrl_ex_sig,
+                            mem_do_write_out    => mem_do_write_ex_sig,
+                            mem_do_read_out     => mem_do_read_ex_sig,
+                            mem_op_out          => mem_op_ex_sig,
+                            do_jmp_out          => do_jump_ex_sig,
+                            do_br_out           => do_br_ex_sig,
+                            alu_op1_ctrl_out    => alu_op1_ctrl_ex_sig,
+                            alu_op2_ctrl_out    => alu_op2_ctrl_ex_sig,
+                            alu_ctrl_out        => alu_ctrl_ex_sig,
+                            br_op_out           => br_op_ex_sig,
+                            pc4_out             => pc4_ex_sig,
+                            pc_out              => pc_ex_sig,
+                            r1_out              => r1_ex_sig,
+                            r2_out              => r2_ex_sig,
+                            imm_out             => imm_ex_sig,
+                            rd_reg1_idx_out     => rd_reg1_idx_ex_sig,
+                            rd_reg2_idx_out     => rd_reg2_idx_ex_sig,
+                            wr_reg_idx_out      => wr_reg_idx_ex_sig,
+                            instr_id_out        => instr_id_ex_sig
                             );
 
     -- ##########################################################################
@@ -629,112 +658,123 @@ begin
     -- ##########################################################################
     -- ##########################################################################
 
-    imm_add : Adder      generic map(
-                             DATA_WIDTH         => MEM_ADR_WIDTH
-                             )
-                         port map(
-                             a                  => sig_016,
-                             b                  => sig_017,
-                             result             => sig_022
-                             );
-
     op1_mux : Mux3x1     generic map(
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             input1             => sig_015,
-                             input2             => sig_025,
-                             input3             => alu_res_ex_mem_sig,
-                             sel                => sig_036,
-                             output             => sig_039
+                             input1             => r1_ex_sig,
+                             input2             => alures_mem_sig,
+                             input3             => wb_res_sig,
+                             sel                => alu_reg1_fwd_ctrl_sig,
+                             output             => r1_ex_op1_sig
                              );
 
     op2_mux : Mux3x1     generic map(
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             input1             => sig_038,
-                             input2             => sig_025,
-                             input3             => alu_res_ex_mem_sig,
-                             sel                => sig_037,
-                             output             => sig_014
+                             input1             => r2_ex_sig,
+                             input2             => alures_mem_sig,
+                             input3             => wb_res_sig,
+                             sel                => alu_reg2_fwd_ctrl_sig,
+                             output             => r2_ex_op2_sig
                              );
 
-    alu_src : Mux2x1     generic map(
+    alu_src_1 : Mux2x1   generic map(
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             input1             => sig_014,
-                             input2             => sig_013(DATA_WIDTH-1 downto 0),
-                             sel                => sig_010(0),
-                             output             => sig_021
+                             input1             => r1_ex_op1_sig,
+                             input2             => pc_ex_sig,
+                             sel                => alu_op1_ctrl_ex_sig,
+                             output             => alu_op1_sig
+                             );
+
+    alu_src_2 : Mux2x1   generic map(
+                             DATA_WIDTH         => DATA_WIDTH
+                             )
+                         port map(
+                             input1             => r2_ex_op2_sig,
+                             input2             => imm_ex_sig,
+                             sel                => alu_op2_ctrl_ex_sig,
+                             output             => alu_op2_sig
                              );
 
     alu_0 : ALU          generic map(
                              DATA_WIDTH         => DATA_WIDTH
                              )
                          port map(
-                             op1                => sig_039,
-                             op2                => sig_021,
-                             operation          => sig_011,
-                             result             => sig_024,
-                             zero               => sig_023
-                             );
-
-    alu_ctrl : ALUCtrl   generic map(
-                             DATA_WIDTH         => DATA_WIDTH
-                             )
-                         port map(
-                             clk                => clk_sig,
-                             func3              => sig_012,
-                             func7              => sig_033,
-                             alu_op             => sig_009,
-                             alu_ctrl           => sig_011
+                             ctrl               => alu_ctrl_ex_sig,
+                             op1                => alu_op1_sig,
+                             op2                => alu_op2_sig,
+                             res                => alures_sig
                              );
 
     fd : ForwardingUnit generic map(
                             RF_ADR_WIDTH        => RF_ADR_WIDTH
                             )
                         port map(
-                            id_ex_rs1           => sig_034,
-                            id_ex_rs2           => sig_035,
-                            ex_mem_rd           => sig_007,
-                            mem_wb_rd           => sig_026,
-                            ex_mem_rf_wr_en     => rf_wr_en_ex_mem_sig,
-                            mem_wb_rf_wr_en     => regfile_wr_en_sig,
-                            fwd_a               => sig_036,
-                            fwd_b               => sig_037
+                            id_reg1_idx                 => rd_reg1_idx_ex_sig,
+                            id_reg2_idx                 => rd_reg2_idx_ex_sig,
+                            wb_reg_wr_en                => reg_do_write_wb_sig,
+                            wb_reg_wr_idx               => wr_reg_idx_wb_sig,
+                            mem_reg_wr_en               => reg_do_write_mem_sig,
+                            mem_reg_wr_idx              => wr_reg_idx_mem_sig,
+                            alu_reg1_forwarding_ctrl    => alu_reg1_fwd_ctrl_sig,
+                            alu_reg2_forwarding_ctrl    => alu_reg2_fwd_ctrl_sig
+                            );
+
+    h : HazardDetection generic map(
+                            RF_ADR_WIDTH        => RF_ADR_WIDTH
+                            )
+                        port map(
+                            ex_do_mem_read_en   => mem_do_read_ex_sig,
+                            ex_reg_wr_idx       => wr_reg_idx_ex_sig,
+                            instr_id            => instr_id_ex_sig,
+                            id_reg1_idx         => r1_reg_idx_sig,
+                            id_reg2_idx         => r2_reg_idx_sig,
+                            mem_do_reg_write    => reg_do_write_mem_sig,
+                            wb_do_reg_write     => reg_do_write_wb_sig,
+                            hazard_id_ex_en     => hazard_id_ex_en_sig,
+                            hazard_fe_en        => hazard_fe_en_sig,
+                            hazard_ex_mem_clear => hazard_ex_mem_clear_sig
+                            );
+
+    brch : Branch       generic map(
+                            DATA_WIDTH          => DATA_WIDTH
+                            )
+                        port map(
+                            comp_ctrl           => br_op_ex_sig,
+                            op1                 => r1_ex_op1_sig,
+                            op2                 => r2_ex_op2_sig,
+                            res                 => branch_taken_sig
                             );
 
     ex_mem_reg : EX_MEM generic map(
                             DATA_WIDTH          => DATA_WIDTH,
                             ADR_WIDTH           => MEM_ADR_WIDTH,
-                            WB_MUX_SEL_WIDTH    => 1,
                             REGFILE_ADR_WIDTH   => 5
                             )
                         port map(
                             clk                 => clk_sig,
-                            rst                 => rst_sig,
-                            wb_sel_in           => sig_002,
-                            wb_sel_out          => mem2reg_ex_mem_sig,
-                            regfile_wr_en_in    => sig_001,
-                            regfile_wr_en_out   => rf_wr_en_ex_mem_sig,
-                            regfile_adr_in      => sig_008,
-                            regfile_adr_out     => sig_007,
-                            mem_wr_en_in        => sig_020,
-                            mem_wr_en_out       => sig_003,
-                            mem_rd_en_in        => sig_019,
-                            mem_rd_en_out       => dmem_rden_ex_mem_sig,
-                            branch_in           => sig_018,
-                            branch_out          => sig_004,
-                            pc_adr_in           => sig_022,
-                            pc_adr_out          => pc_next_adr_sig,
-                            alu_zero_in         => sig_023,
-                            alu_zero_out        => sig_005,
-                            alu_res_in          => sig_024,
-                            alu_res_out         => alu_res_ex_mem_sig,
-                            op2_in              => sig_014,
-                            op2_out             => op2_ex_mem_sig
+                            rst                 => hazard_ex_mem_clear_sig,
+                            en                  => '1',
+                            reg_do_write_in     => reg_do_write_ex_sig,
+                            reg_wr_src_ctrl_in  => reg_wr_src_ctrl_ex_sig,
+                            mem_do_write_in     => mem_do_write_ex_sig,
+                            mem_op_in           => mem_op_ex_sig,
+                            pc4_in              => pc4_ex_sig,
+                            alures_in           => alures_sig,
+                            r2_in               => r2_ex_op2_sig,
+                            wr_reg_idx_in       => wr_reg_idx_ex_sig,
+                            reg_do_write_out    => reg_do_write_mem_sig,
+                            reg_wr_src_ctrl_out => reg_wr_src_ctrl_mem_sig,
+                            mem_do_write_out    => mem_do_write_mem_sig,
+                            mem_op_out          => mem_op_mem_sig,
+                            pc4_out             => pc4_mem_sig,
+                            alures_out          => alures_mem_sig,
+                            r2_out              => r2_mem_sig,
+                            wr_reg_idx_out      => wr_reg_idx_mem_sig
                             );
 
     -- ##########################################################################
@@ -745,36 +785,39 @@ begin
 
     data_mem : RAM       generic map(
                              DATA_WIDTH         => DATA_WIDTH,
+                             ADR_WIDTH          => MEM_ADR_WIDTH,
                              SIZE               => DMEM_SIZE_BYTES
                              )
                          port map(
                              clk                => clk_sig,
-                             wr_en              => sig_003,
-                             rd_en              => dmem_rden_ex_mem_sig,
-                             adr                => alu_res_ex_mem_sig,
-                             data_in            => op2_ex_mem_sig,
-                             data_out           => dmem_output_sig
+                             wr_en              => mem_do_write_mem_sig,
+                             op                 => mem_op_mem_sig,
+                             adr                => alures_mem_sig,
+                             data_in            => r2_mem_sig,
+                             data_out           => mem_data_sig
                              );
 
     mem_wb_reg : MEM_WB generic map(
                             DATA_WIDTH          => DATA_WIDTH,
                             ADR_WIDTH           => MEM_ADR_WIDTH,
-                            WB_MUX_SEL_WIDTH    => 1,
                             REGFILE_ADR_WIDTH   => 5
                             )
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
-                            wb_sel_in           => mem2reg_ex_mem_sig,
-                            wb_sel_out          => mem2reg_mem_wb_sig,
-                            regfile_wr_en_in    => rf_wr_en_ex_mem_sig,
-                            regfile_wr_en_out   => regfile_wr_en_sig,
-                            regfile_wr_adr_in   => sig_007,
-                            regfile_wr_adr_out  => sig_026,
-                            alu_res_in          => alu_res_ex_mem_sig,
-                            alu_res_out         => alu_res_mem_wb_sig,
-                            data_mem_in         => dmem_output_sig,
-                            data_mem_out        => dmem_out_mem_wb_sig
+                            en                  => '1',
+                            reg_do_write_in     => reg_do_write_mem_sig,
+                            reg_wr_src_ctrl_in  => reg_wr_src_ctrl_mem_sig,
+                            pc4_in              => pc4_mem_sig,
+                            alures_in           => alures_mem_sig,
+                            mem_read_in         => mem_data_sig,
+                            wr_reg_idx_in       => wr_reg_idx_mem_sig,
+                            reg_do_write_out    => reg_do_write_wb_sig,
+                            reg_wr_src_ctrl_out => reg_wr_src_ctrl_wb_sig,
+                            pc4_out             => pc4_wb_sig,
+                            alures_out          => alures_wb_sig,
+                            mem_read_out        => mem_read_wb_sig,
+                            wr_reg_idx_out      => wr_reg_idx_wb_sig
                             );
 
     -- ##########################################################################
@@ -783,14 +826,15 @@ begin
     -- ##########################################################################
     -- ##########################################################################
 
-    wb : Mux2x1         generic map(
+    wb : Mux3x1         generic map(
                             DATA_WIDTH          => DATA_WIDTH
                             )
                         port map(
-                            input1              => alu_res_mem_wb_sig,
-                            input2              => dmem_out_mem_wb_sig,
-                            sel                 => mem2reg_mem_wb_sig(0),
-                            output              => sig_025
+                            input1              => mem_read_wb_sig,
+                            input2              => alures_wb_sig,
+                            input3              => pc4_wb_sig,
+                            sel                 => reg_wr_src_ctrl_wb_sig,
+                            output              => wb_res_sig
                             );
 
 end behavior;
