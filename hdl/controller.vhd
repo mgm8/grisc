@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.26
+--! \version 0.0.34
 --! 
 --! \date 2020/11/23
 --!
@@ -57,7 +57,7 @@ end Controller;
 architecture behavior of Controller is
 
     -- Reference: https://github.com/riscv/riscv-opcodes/blob/master/opcodes-rv32i
-    constant RISCV_OPCODE_BRCH  : std_logic_vector(6 downto 0) := "0011011";    --! Branches instructions.
+    constant RISCV_OPCODE_BRCH  : std_logic_vector(6 downto 0) := "1100011";    --! Branches instructions.
     constant RISCV_FUNC3_BEQ    : std_logic_vector(2 downto 0) := "000";        --! beq.
     constant RISCV_FUNC3_BNE    : std_logic_vector(2 downto 0) := "001";        --! bne.
     constant RISCV_FUNC3_BLT    : std_logic_vector(2 downto 0) := "100";        --! blt.
@@ -122,9 +122,89 @@ begin
     process(opcode)
     begin
         case opcode is
+            when RISCV_OPCODE_BRCH =>
+                case func3 is
+                    when RISCV_FUNC3_BEQ =>
+                        reg_write   <= '0';
+                        alu_src     <= '0';
+                        alu_op      <= "01";
+                        dmem_wr_en  <= '0';
+                        dmem_rd_en  <= '0';
+--                        mem_to_reg  <= '';
+                        branch      <= '1';
+                        if DEBUG_MODE = true then
+                            assert false report "Read instruction: beq" severity note;
+                        end if;
+                    when RISCV_FUNC3_BNE =>
+                        reg_write   <= '0';
+                        alu_src     <= '0';
+                        alu_op      <= "01";
+                        dmem_wr_en  <= '0';
+                        dmem_rd_en  <= '0';
+--                        mem_to_reg  <= '';
+                        branch      <= '1';
+                        if DEBUG_MODE = true then
+                            assert false report "Read instruction: bne" severity note;
+                        end if;
+                    when RISCV_FUNC3_BLT =>
+                        reg_write   <= '0';
+                        alu_src     <= '0';
+                        alu_op      <= "01";
+                        dmem_wr_en  <= '0';
+                        dmem_rd_en  <= '0';
+--                        mem_to_reg  <= '';
+                        branch      <= '1';
+                        if DEBUG_MODE = true then
+                            assert false report "Read instruction: blt" severity note;
+                        end if;
+                    when RISCV_FUNC3_BGE =>
+                        reg_write   <= '0';
+                        alu_src     <= '0';
+                        alu_op      <= "01";
+                        dmem_wr_en  <= '0';
+                        dmem_rd_en  <= '0';
+--                        mem_to_reg  <= '';
+                        branch      <= '1';
+                        if DEBUG_MODE = true then
+                            assert false report "Read instruction: bge" severity note;
+                        end if;
+--                    when RISCV_FUNC3_BLTU =>
+--                        reg_write   <= '';
+--                        alu_src     <= '';
+--                        alu_op      <= "";
+--                        dmem_wr_en  <= '';
+--                        dmem_rd_en  <= '';
+--                        mem_to_reg  <= '';
+--                        branch      <= '';
+--                        if DEBUG_MODE = true then
+--                            assert false report "Read instruction: bltu" severity note;
+--                        end if;
+--                    when RISCV_FUNC3_BGEU =>
+--                        reg_write   <= '';
+--                        alu_src     <= '';
+--                        alu_op      <= "";
+--                        dmem_wr_en  <= '';
+--                        dmem_rd_en  <= '';
+--                        mem_to_reg  <= '';
+--                        branch      <= '';
+--                        if DEBUG_MODE = true then
+--                            assert false report "Read instruction: bgeu" severity note;
+--                        end if;
+                    when others =>
+                        reg_write   <= '0';
+                        alu_src     <= '0';
+                        alu_op      <= "00";
+                        dmem_wr_en  <= '0';
+                        dmem_rd_en  <= '0';
+                        mem_to_reg  <= '0';
+                        branch      <= '0';
+                        if DEBUG_MODE = true then
+                            assert false report "Read instruction: beq" severity note;
+                        end if;
+                end case;
             when RISCV_OPCODE_LUI =>
                 reg_write   <= '1';
-                alu_src     <= '0';
+                alu_src     <= '1';
                 alu_op      <= "00";
                 dmem_wr_en  <= '0';
                 dmem_rd_en  <= '1';
@@ -146,7 +226,7 @@ begin
 --                alu_src     <= '';
 --                alu_op      <= "";
 --                dmem_wr_en  <= '0';
---                dmem_rd_en  <= '';
+--                dmem_rd_en  <= '1';
 --                mem_to_reg  <= '';
 --                branch      <= '';
 --            when RISCV_OPCODE_JALR =>
@@ -154,7 +234,7 @@ begin
 --                alu_src     <= '';
 --                alu_op      <= "";
 --                dmem_wr_en  <= '0';
---                dmem_rd_en  <= '';
+--                dmem_rd_en  <= '1';
 --                mem_to_reg  <= '';
 --                branch      <= '';
             when RISCV_OPCODE_IMM =>

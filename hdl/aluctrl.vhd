@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.32
+--! \version 0.0.34
 --! 
 --! \date 2020/11/23
 --!
@@ -41,7 +41,7 @@ entity ALUCtrl is
     port(
         clk         : in std_logic;                             --! Clock signal.
         func3       : in std_logic_vector(2 downto 0);          --! 3-bit function code.
-        func7_5     : in std_logic;                             --! Bit 5 of the 7-bit function code.
+        func7       : in std_logic_vector(6 downto 0);          --! 7-bit function code.
         alu_op      : in std_logic_vector(1 downto 0);          --! ALU operation.
         alu_ctrl    : out std_logic_vector(3 downto 0)          --! ALU operation code.
         );
@@ -53,35 +53,45 @@ architecture behavior of ALUCtrl is
     constant ALU_OP_ID_OR  : std_logic_vector(alu_ctrl'range) := "0001";    --! OR operation.
     constant ALU_OP_ID_ADD : std_logic_vector(alu_ctrl'range) := "0010";    --! ADD operation.
     constant ALU_OP_ID_XOR : std_logic_vector(alu_ctrl'range) := "0011";    --! XOR operation.
-    constant ALU_OP_ID_SUB : std_logic_vector(alu_ctrl'range) := "0110";    --! SUB operation.
-    constant ALU_OP_ID_SLT : std_logic_vector(alu_ctrl'range) := "0111";    --! SLT operation.
-    constant ALU_OP_ID_NOR : std_logic_vector(alu_ctrl'range) := "1100";    --! NOR operation.
     constant ALU_OP_ID_SLL : std_logic_vector(alu_ctrl'range) := "0100";    --! SLL operation.
     constant ALU_OP_ID_SRL : std_logic_vector(alu_ctrl'range) := "0101";    --! SRL operation.
+    constant ALU_OP_ID_SUB : std_logic_vector(alu_ctrl'range) := "0110";    --! SUB operation.
+    constant ALU_OP_ID_SLT : std_logic_vector(alu_ctrl'range) := "0111";    --! SLT operation.
+    constant ALU_OP_ID_BEQ : std_logic_vector(alu_ctrl'range) := "1000";    --! BEQ operation.
+    constant ALU_OP_ID_BNE : std_logic_vector(alu_ctrl'range) := "1001";    --! BNE operation.
+    constant ALU_OP_ID_BLT : std_logic_vector(alu_ctrl'range) := "1010";    --! BLT operation.
+    constant ALU_OP_ID_BGE : std_logic_vector(alu_ctrl'range) := "1011";    --! BGE operation.
+    constant ALU_OP_ID_NOR : std_logic_vector(alu_ctrl'range) := "1100";    --! NOR operation.
 
 begin
 
-    process(func3, func7_5, alu_op)
+    process(func3, func7, alu_op)
     begin
         if alu_op = "00" then                                               -- load or store
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif alu_op = "01" then                                            -- beq
+        elsif (alu_op = "01" and func3 = "000") then                        -- B-type: beq
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "000") then      -- R-type: add
+        elsif (alu_op = "01" and func3 = "001") then                        -- B-type: bne
+            alu_ctrl <= ALU_OP_ID_BNE;
+        elsif (alu_op = "01" and func3 = "100") then                        -- B-type: blt
+            alu_ctrl <= ALU_OP_ID_BLT;
+        elsif (alu_op = "01" and func3 = "101") then                        -- B-type: bge
+            alu_ctrl <= ALU_OP_ID_BGE;
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "000") then     -- R-type: add
             alu_ctrl <= ALU_OP_ID_ADD;
-        elsif (alu_op = "10" and func7_5 = '1' and func3 = "000") then      -- R-type: sub
+        elsif (alu_op = "10" and func7(5) = '1' and func3 = "000") then     -- R-type: sub
             alu_ctrl <= ALU_OP_ID_SUB;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "111") then      -- R-type: and
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "111") then     -- R-type: and
             alu_ctrl <= ALU_OP_ID_AND;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "110") then      -- R-type: or
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "110") then     -- R-type: or
             alu_ctrl <= ALU_OP_ID_OR;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "100") then      -- R-type: xor
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "100") then     -- R-type: xor
             alu_ctrl <= ALU_OP_ID_XOR;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "001") then      -- R-type: sll
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "001") then     -- R-type: sll
             alu_ctrl <= ALU_OP_ID_SLL;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "101") then      -- R-type: srl
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "101") then     -- R-type: srl
             alu_ctrl <= ALU_OP_ID_SRL;
-        elsif (alu_op = "10" and func7_5 = '0' and func3 = "010") then      -- R-type: srl
+        elsif (alu_op = "10" and func7(5) = '0' and func3 = "010") then     -- R-type: srl
             alu_ctrl <= ALU_OP_ID_SLT;
         else
             alu_ctrl <= "1111";

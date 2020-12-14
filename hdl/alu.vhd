@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.33
+--! \version 0.0.34
 --! 
 --! \date 2020/11/22
 --! 
@@ -55,11 +55,15 @@ architecture behavior of ALU is
     constant ALU_OP_ID_OR  : std_logic_vector(operation'range) := "0001";   --! OR operation.
     constant ALU_OP_ID_ADD : std_logic_vector(operation'range) := "0010";   --! ADD operation.
     constant ALU_OP_ID_XOR : std_logic_vector(operation'range) := "0011";   --! XOR operation.
-    constant ALU_OP_ID_SUB : std_logic_vector(operation'range) := "0110";   --! SUB operation.
-    constant ALU_OP_ID_SLT : std_logic_vector(operation'range) := "0111";   --! SLT operation.
-    constant ALU_OP_ID_NOR : std_logic_vector(operation'range) := "1100";   --! NOR operation.
     constant ALU_OP_ID_SLL : std_logic_vector(operation'range) := "0100";   --! SLL operation.
     constant ALU_OP_ID_SRL : std_logic_vector(operation'range) := "0101";   --! SRL operation.
+    constant ALU_OP_ID_SUB : std_logic_vector(operation'range) := "0110";   --! SUB operation.
+    constant ALU_OP_ID_SLT : std_logic_vector(operation'range) := "0111";   --! SLT operation.
+    constant ALU_OP_ID_BEQ : std_logic_vector(operation'range) := "1000";   --! BEQ operation.
+    constant ALU_OP_ID_BNE : std_logic_vector(operation'range) := "1001";   --! BNE operation.
+    constant ALU_OP_ID_BLT : std_logic_vector(operation'range) := "1010";   --! BLT operation.
+    constant ALU_OP_ID_BGE : std_logic_vector(operation'range) := "1011";   --! BGE operation.
+    constant ALU_OP_ID_NOR : std_logic_vector(operation'range) := "1100";   --! NOR operation.
 
     signal result_sig   : std_logic_vector(result'range) := (others => '0');
     signal res_buf_sig  : std_logic_vector(DATA_WIDTH downto 0) := (others => '0');
@@ -93,6 +97,30 @@ begin
             when ALU_OP_ID_NOR => result_sig <= op1 nor op2;
             when ALU_OP_ID_SLL => result_sig <= std_logic_vector(shift_left(unsigned(op1), to_integer(unsigned(op2))));
             when ALU_OP_ID_SRL => result_sig <= std_logic_vector(shift_right(unsigned(op1), to_integer(unsigned(op2))));
+            when ALU_OP_ID_BEQ =>
+                if op1 = op2 then
+                    result_sig <= (others => '0');
+                else
+                    result_sig <= (others => '1');
+                end if;
+            when ALU_OP_ID_BNE =>
+                if op1 /= op2 then
+                    result_sig <= (others => '0');
+                else
+                    result_sig <= (others => '1');
+                end if;
+            when ALU_OP_ID_BLT =>
+                if op1 < op2 then
+                    result_sig <= (others => '0');
+                else
+                    result_sig <= (others => '1');
+                end if;
+            when ALU_OP_ID_BGE =>
+                if op1 >= op2 then
+                    result_sig <= (others => '0');
+                else
+                    result_sig <= (others => '1');
+                end if;
             when others => result_sig <= (others => '0');
         end case;
     end process;

@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.31
+--! \version 0.0.34
 --! 
 --! \date 2020/11/22
 --! 
@@ -172,7 +172,7 @@ architecture behavior of Core is
         port(
             clk         : in std_logic;                                 --! Clock signal.
             func3       : in std_logic_vector(2 downto 0);              --! 3-bit function code.
-            func7_5     : in std_logic;                                 --! Bit 5 of the 7-bit function code.
+            func7       : in std_logic_vector(6 downto 0);              --! 7-bit function code.
             alu_op      : in std_logic_vector(1 downto 0);              --! ALU operation.
             alu_ctrl    : out std_logic_vector(3 downto 0)              --! ALU operation code.
             );
@@ -687,7 +687,7 @@ begin
                          port map(
                              clk                => clk_sig,
                              func3              => sig_012,
-                             func7_5            => sig_033(5),
+                             func7              => sig_033,
                              alu_op             => sig_009,
                              alu_ctrl           => sig_011
                              );
