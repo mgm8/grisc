@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.40
+--! \version 0.0.44
 --! 
 --! \date 2020/11/21
 --! 
@@ -63,11 +63,20 @@ begin
     begin
         if rising_edge(clk) then
             if wr_en = '1' then
-                ram_mem(to_integer(unsigned(adr))) <= data_in;
+                if adr < std_logic_vector(to_unsigned(SIZE, adr'length)) then
+                    ram_mem(to_integer(unsigned(adr))) <= data_in;
+                end if;
             end if;
         end if;
     end process;
 
-    data_out <= ram_mem(to_integer(unsigned(adr)));
+    process(adr)
+    begin
+        if adr > std_logic_vector(to_unsigned(SIZE, adr'length)) then
+            data_out <= (others => '0');
+        else
+            data_out <= ram_mem(to_integer(unsigned(adr)));
+        end if;
+    end process;
 
 end behavior;
