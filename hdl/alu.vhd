@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.36
+--! \version 0.0.42
 --! 
 --! \date 2020/11/22
 --! 
@@ -62,7 +62,7 @@ begin
     begin
         case ctrl is
             when GRISC_ALU_OP_NOP =>
-                res <= x"00000000";
+                res <= ZERO_CONST;
             when GRISC_ALU_OP_ADD =>
                 res <= op1 + op2;
             when GRISC_ALU_OP_SUB =>
@@ -122,7 +122,7 @@ begin
 --                    res <= op1 rem op2;
 --                end if;
             when others =>
-                res <= x"00000000";
+                res <= ZERO_CONST;
         end case;
     end process;
 

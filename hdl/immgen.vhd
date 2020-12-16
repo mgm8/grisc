@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.37
+--! \version 0.0.42
 --! 
 --! \date 2020/11/23
 --!
@@ -51,13 +51,15 @@ end ImmGen;
 
 architecture behavior of ImmGen is
 
+    constant ZERO_CONST : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+
 begin
 
     process(instr, instr_id)
     begin
         case instr_id is
             when RISCV_INSTR_NOP =>
-                imm <= x"DEADBEEF";
+                imm <= ZERO_CONST;
             when RISCV_INSTR_LUI =>
                 imm <= instr and x"FFFFF000";
             when RISCV_INSTR_AUIPC =>
@@ -207,7 +209,7 @@ begin
                     imm(i) <= instr(31);
                 end loop;
             when others =>
-                imm <= x"DEADBEEF";
+                imm <= ZERO_CONST;
         end case;
     end process;
 
