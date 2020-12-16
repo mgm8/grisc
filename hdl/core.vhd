@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.41
+--! \version 0.0.43
 --! 
 --! \date 2020/11/22
 --! 
@@ -155,7 +155,40 @@ architecture behavior of Core is
             wr_en       : in std_logic;                                 --! Write register enable.
             wr_data     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data to write into register.
             reg1        : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
-            reg2        : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operand 2.
+            reg2        : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
+
+            reg_x0      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x0.
+            reg_x1      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x1.
+            reg_x2      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x2.
+            reg_x3      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x3.
+            reg_x4      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x4.
+            reg_x5      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x5.
+            reg_x6      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x6.
+            reg_x7      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x7.
+            reg_x8      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x8.
+            reg_x9      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x9.
+            reg_x10     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x10.
+            reg_x11     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x11.
+            reg_x12     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x12.
+            reg_x13     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x13.
+            reg_x14     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x14.
+            reg_x15     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x15.
+            reg_x16     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x16.
+            reg_x17     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x17.
+            reg_x18     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x18.
+            reg_x19     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x19.
+            reg_x20     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x20.
+            reg_x21     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x21.
+            reg_x22     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x22.
+            reg_x23     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x23.
+            reg_x24     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x24.
+            reg_x25     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x25.
+            reg_x26     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x26.
+            reg_x27     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x27.
+            reg_x28     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x28.
+            reg_x29     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x29.
+            reg_x30     : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Register x30.
+            reg_x31     : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Register x31.
             );
     end component;
 
