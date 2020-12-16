@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.38
+--! \version 0.0.45
 --! 
 --! \date 2020/12/14
 --! 
@@ -127,30 +127,76 @@ begin
                                 instr_id <= RISCV_INSTR_ADD;
                             when RISCV_FUNC7_SUB =>
                                 instr_id <= RISCV_INSTR_SUB;
+                            when RISCV_FUNC7_MUL =>
+                                instr_id <= RISCV_INSTR_MUL;
                             when others =>
                                 instr_id <= RISCV_INSTR_NOP;
                         end case;
                     when RISCV_FUNC3_SLL =>
-                        instr_id <= RISCV_INSTR_SLL;
+                        case func7 is
+                            when RISCV_FUNC7_SLL =>
+                                instr_id <= RISCV_INSTR_SLL;
+                            when RISCV_FUNC7_MULH =>
+                                instr_id <= RISCV_INSTR_MULH;
+                            when others =>
+                                instr_id <= RISCV_INSTR_NOP;
+                        end case;
                     when RISCV_FUNC3_SLT =>
-                        instr_id <= RISCV_INSTR_SLT;
+                        case func7 is
+                            when RISCV_FUNC7_SLT =>
+                                instr_id <= RISCV_INSTR_SLT;
+                            when RISCV_FUNC7_MULHSU =>
+                                instr_id <= RISCV_INSTR_MULHSU;
+                            when others =>
+                                instr_id <= RISCV_INSTR_NOP;
+                        end case;
                     when RISCV_FUNC3_SLTU=>
-                        instr_id <= RISCV_INSTR_SLTU;
+                        case func7 is
+                            when RISCV_FUNC7_SLTU =>
+                                instr_id <= RISCV_INSTR_SLTU;
+                            when RISCV_FUNC7_MULHU =>
+                                instr_id <= RISCV_INSTR_MULHU;
+                            when others =>
+                                instr_id <= RISCV_INSTR_NOP;
+                        end case;
                     when RISCV_FUNC3_XOR =>
-                        instr_id <= RISCV_INSTR_XOR;
+                        case func7 is
+                            when RISCV_FUNC7_XOR =>
+                                instr_id <= RISCV_INSTR_XOR;
+                            when RISCV_FUNC7_DIV =>
+                                instr_id <= RISCV_INSTR_DIV;
+                            when others =>
+                                instr_id <= RISCV_INSTR_NOP;
+                        end case;
                     when RISCV_FUNC3_SRL =>
                         case func7 is
                             when RISCV_FUNC7_SRL =>
                                 instr_id <= RISCV_INSTR_SRL;
                             when RISCV_FUNC7_SRA =>
                                 instr_id <= RISCV_INSTR_SRA;
+                            when RISCV_FUNC7_DIVU =>
+                                instr_id <= RISCV_INSTR_DIVU;
                             when others =>
                                 instr_id <= RISCV_INSTR_NOP;
                         end case;
                     when RISCV_FUNC3_OR =>
-                        instr_id <= RISCV_INSTR_OR;
+                        case func7 is
+                            when RISCV_FUNC7_OR =>
+                                instr_id <= RISCV_INSTR_OR;
+                            when RISCV_FUNC7_REM =>
+                                instr_id <= RISCV_INSTR_REM;
+                            when others =>
+                                instr_id <= RISCV_INSTR_NOP;
+                        end case;
                     when RISCV_FUNC3_AND =>
-                        instr_id <= RISCV_INSTR_AND;
+                        case func7 is
+                            when RISCV_FUNC7_OR =>
+                                instr_id <= RISCV_INSTR_AND;
+                            when RISCV_FUNC7_REMU =>
+                                instr_id <= RISCV_INSTR_REMU;
+                            when others =>
+                                instr_id <= RISCV_INSTR_NOP;
+                        end case;
                     when others =>
                         instr_id <= RISCV_INSTR_NOP;
                 end case;
@@ -164,8 +210,8 @@ begin
                         instr_id <= RISCV_INSTR_LW;
                     when RISCV_FUNC3_LBU =>
                         instr_id <= RISCV_INSTR_LBU;
---                    when RISCV_FUNC3_LHU =>
---                        instr_id <= RISCV_INSTR_LHU;
+                    when RISCV_FUNC3_LHU =>
+                        instr_id <= RISCV_INSTR_LHU;
                     when others =>
                         instr_id <= RISCV_INSTR_NOP;
                 end case;

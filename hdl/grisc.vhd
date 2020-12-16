@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.36
+--! \version 0.0.45
 --! 
 --! \date 2020/12/14
 --! 
@@ -36,7 +36,7 @@ library ieee;
 
 package grisc is
 
-    -- Reference: https://github.com/riscv/riscv-opcodes/blob/master/opcodes-rv32i
+    -- RV32I opcodes (https://github.com/riscv/riscv-opcodes/blob/master/opcodes-rv32i)
     constant RISCV_OPCODE_BRCH  : std_logic_vector(6 downto 0) := "1100011";    --! Branches instructions.
     constant RISCV_FUNC3_BEQ    : std_logic_vector(2 downto 0) := "000";        --! beq.
     constant RISCV_FUNC3_BNE    : std_logic_vector(2 downto 0) := "001";        --! bne.
@@ -97,6 +97,25 @@ package grisc is
     constant RISCV_FUNC3_SH     : std_logic_vector(2 downto 0) := "001";        --! sh (store half-word).
     constant RISCV_FUNC3_SW     : std_logic_vector(2 downto 0) := "010";        --! sw (store-word).
 
+    -- RV32M (https://github.com/riscv/riscv-opcodes/blob/master/opcodes-rv32m)
+    constant RISCV_OPCODE_MUL   : std_logic_vector(6 downto 0) := "0110011";    --! Multiplication instructions.
+    constant RISCV_FUNC7_MUL    : std_logic_vector(6 downto 0) := "0000001";    --! mul.
+    constant RISCV_FUNC3_MUL    : std_logic_vector(2 downto 0) := "000";        --! mul.
+    constant RISCV_FUNC7_MULH   : std_logic_vector(6 downto 0) := "0000001";    --! mulh.
+    constant RISCV_FUNC3_MULH   : std_logic_vector(2 downto 0) := "001";        --! mulh.
+    constant RISCV_FUNC7_MULHSU : std_logic_vector(6 downto 0) := "0000001";    --! mulhsu.
+    constant RISCV_FUNC3_MULHSU : std_logic_vector(2 downto 0) := "010";        --! mulhsu.
+    constant RISCV_FUNC7_MULHU  : std_logic_vector(6 downto 0) := "0000001";    --! mulhu.
+    constant RISCV_FUNC3_MULHU  : std_logic_vector(2 downto 0) := "011";        --! mulhu.
+    constant RISCV_FUNC7_DIV    : std_logic_vector(6 downto 0) := "0000001";    --! div.
+    constant RISCV_FUNC3_DIV    : std_logic_vector(2 downto 0) := "100";        --! div.
+    constant RISCV_FUNC7_DIVU   : std_logic_vector(6 downto 0) := "0000001";    --! divu.
+    constant RISCV_FUNC3_DIVU   : std_logic_vector(2 downto 0) := "101";        --! divu.
+    constant RISCV_FUNC7_REM    : std_logic_vector(6 downto 0) := "0000001";    --! rem.
+    constant RISCV_FUNC3_REM    : std_logic_vector(2 downto 0) := "110";        --! rem.
+    constant RISCV_FUNC7_REMU   : std_logic_vector(6 downto 0) := "0000001";    --! remu.
+    constant RISCV_FUNC3_REMU   : std_logic_vector(2 downto 0) := "111";        --! remu.
+
     -- Instructions IDs
     constant RISCV_INSTR_NOP    : std_logic_vector(5 downto 0) := "000000";
     constant RISCV_INSTR_LUI    : std_logic_vector(5 downto 0) := "000001";
@@ -113,29 +132,38 @@ package grisc is
     constant RISCV_INSTR_LH     : std_logic_vector(5 downto 0) := "001100";
     constant RISCV_INSTR_LW     : std_logic_vector(5 downto 0) := "001101";
     constant RISCV_INSTR_LBU    : std_logic_vector(5 downto 0) := "001110";
-    constant RISCV_INSTR_SB     : std_logic_vector(5 downto 0) := "001111";
-    constant RISCV_INSTR_SH     : std_logic_vector(5 downto 0) := "010000";
-    constant RISCV_INSTR_SW     : std_logic_vector(5 downto 0) := "010001";
-    constant RISCV_INSTR_ADDI   : std_logic_vector(5 downto 0) := "010010";
-    constant RISCV_INSTR_SLTI   : std_logic_vector(5 downto 0) := "010011";
-    constant RISCV_INSTR_SLTIU  : std_logic_vector(5 downto 0) := "010100";
-    constant RISCV_INSTR_XORI   : std_logic_vector(5 downto 0) := "010101";
-    constant RISCV_INSTR_ORI    : std_logic_vector(5 downto 0) := "010110";
-    constant RISCV_INSTR_ANDI   : std_logic_vector(5 downto 0) := "010111";
-    constant RISCV_INSTR_SLLI   : std_logic_vector(5 downto 0) := "011000";
-    constant RISCV_INSTR_SRLI   : std_logic_vector(5 downto 0) := "011001";
-    constant RISCV_INSTR_SRAI   : std_logic_vector(5 downto 0) := "011010";
-    constant RISCV_INSTR_ADD    : std_logic_vector(5 downto 0) := "011011";
-    constant RISCV_INSTR_SUB    : std_logic_vector(5 downto 0) := "011100";
-    constant RISCV_INSTR_SLL    : std_logic_vector(5 downto 0) := "011101";
-    constant RISCV_INSTR_SLT    : std_logic_vector(5 downto 0) := "011110";
-    constant RISCV_INSTR_SLTU   : std_logic_vector(5 downto 0) := "011111";
-    constant RISCV_INSTR_XOR    : std_logic_vector(5 downto 0) := "100000";
-    constant RISCV_INSTR_SRL    : std_logic_vector(5 downto 0) := "100001";
-    constant RISCV_INSTR_SRA    : std_logic_vector(5 downto 0) := "100010";
-    constant RISCV_INSTR_OR     : std_logic_vector(5 downto 0) := "100011";
-    constant RISCV_INSTR_AND    : std_logic_vector(5 downto 0) := "100100";
-    constant RISCV_INSTR_ECALL  : std_logic_vector(5 downto 0) := "100101";
+    constant RISCV_INSTR_LHU    : std_logic_vector(5 downto 0) := "001111";
+    constant RISCV_INSTR_SB     : std_logic_vector(5 downto 0) := "010000";
+    constant RISCV_INSTR_SH     : std_logic_vector(5 downto 0) := "010001";
+    constant RISCV_INSTR_SW     : std_logic_vector(5 downto 0) := "010010";
+    constant RISCV_INSTR_ADDI   : std_logic_vector(5 downto 0) := "010011";
+    constant RISCV_INSTR_SLTI   : std_logic_vector(5 downto 0) := "010100";
+    constant RISCV_INSTR_SLTIU  : std_logic_vector(5 downto 0) := "010101";
+    constant RISCV_INSTR_XORI   : std_logic_vector(5 downto 0) := "010110";
+    constant RISCV_INSTR_ORI    : std_logic_vector(5 downto 0) := "010111";
+    constant RISCV_INSTR_ANDI   : std_logic_vector(5 downto 0) := "011000";
+    constant RISCV_INSTR_SLLI   : std_logic_vector(5 downto 0) := "011001";
+    constant RISCV_INSTR_SRLI   : std_logic_vector(5 downto 0) := "011010";
+    constant RISCV_INSTR_SRAI   : std_logic_vector(5 downto 0) := "011011";
+    constant RISCV_INSTR_ADD    : std_logic_vector(5 downto 0) := "011100";
+    constant RISCV_INSTR_SUB    : std_logic_vector(5 downto 0) := "011101";
+    constant RISCV_INSTR_SLL    : std_logic_vector(5 downto 0) := "011110";
+    constant RISCV_INSTR_SLT    : std_logic_vector(5 downto 0) := "011111";
+    constant RISCV_INSTR_SLTU   : std_logic_vector(5 downto 0) := "100000";
+    constant RISCV_INSTR_XOR    : std_logic_vector(5 downto 0) := "100001";
+    constant RISCV_INSTR_SRL    : std_logic_vector(5 downto 0) := "100010";
+    constant RISCV_INSTR_SRA    : std_logic_vector(5 downto 0) := "100011";
+    constant RISCV_INSTR_OR     : std_logic_vector(5 downto 0) := "100100";
+    constant RISCV_INSTR_AND    : std_logic_vector(5 downto 0) := "100101";
+    constant RISCV_INSTR_ECALL  : std_logic_vector(5 downto 0) := "100110";
+    constant RISCV_INSTR_MUL    : std_logic_vector(5 downto 0) := "100111";
+    constant RISCV_INSTR_MULH   : std_logic_vector(5 downto 0) := "101000";
+    constant RISCV_INSTR_MULHSU : std_logic_vector(5 downto 0) := "101001";
+    constant RISCV_INSTR_MULHU  : std_logic_vector(5 downto 0) := "101010";
+    constant RISCV_INSTR_DIV    : std_logic_vector(5 downto 0) := "101011";
+    constant RISCV_INSTR_DIVU   : std_logic_vector(5 downto 0) := "101100";
+    constant RISCV_INSTR_REM    : std_logic_vector(5 downto 0) := "101101";
+    constant RISCV_INSTR_REMU   : std_logic_vector(5 downto 0) := "101110";
 
     constant GRISC_ALU_OP_NOP       : std_logic_vector(4 downto 0) := "00000";
     constant GRISC_ALU_OP_ADD       : std_logic_vector(4 downto 0) := "00001";

@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.42
+--! \version 0.0.45
 --! 
 --! \date 2020/11/22
 --! 
@@ -68,9 +68,13 @@ begin
             when GRISC_ALU_OP_SUB =>
                 res <= op1 - op2;
             when GRISC_ALU_OP_MUL =>
-                res <= op1 * op2;
---            when GRISC_ALU_OP_DIV =>
---                res <= op1 / op2;
+                res <= std_logic_vector(to_signed(to_integer(signed(op1) * signed(op2)), DATA_WIDTH));
+            when GRISC_ALU_OP_DIV =>
+                if op2 = ZERO_CONST then
+                    res <= ONE_CONST;
+                else
+                    res <= std_logic_vector(to_signed(to_integer(signed(op1) / signed(op2)), DATA_WIDTH));
+                end if;
             when GRISC_ALU_OP_AND =>
                 res <= op1 and op2;
             when GRISC_ALU_OP_OR =>
@@ -103,24 +107,24 @@ begin
                 res <= op1 * op2;
             when GRISC_ALU_OP_MULHSU=>
                 res <= op1 * op2;
---            when GRISC_ALU_OP_DIVU =>
---                if op2 = ZERO_CONST then
---                    res <= ONE_CONST;
---                else
---                    res <= op1 / op2;
---                end if;
---            when GRISC_ALU_OP_REM =>
---                if op2 = ZERO_CONST then
---                    res <= op1;
---                else
---                    res <= op1 rem op2;
---                end if;
---            when GRISC_ALU_OP_REMU =>
---                if op2 = ZERO_CONST then
---                    res <= op1;
---                else
---                    res <= op1 rem op2;
---                end if;
+            when GRISC_ALU_OP_DIVU =>
+                if op2 = ZERO_CONST then
+                    res <= ONE_CONST;
+                else
+                    res <= std_logic_vector(to_unsigned(to_integer(signed(op1) / signed(op2)), DATA_WIDTH));
+                end if;
+            when GRISC_ALU_OP_REM =>
+                if op2 = ZERO_CONST then
+                    res <= op1;
+                else
+                    res <= std_logic_vector(to_signed(to_integer(signed(op1) rem signed(op2)), DATA_WIDTH));
+                end if;
+            when GRISC_ALU_OP_REMU =>
+                if op2 = ZERO_CONST then
+                    res <= op1;
+                else
+                    res <= std_logic_vector(to_unsigned(to_integer(signed(op1) rem signed(op2)), DATA_WIDTH));
+                end if;
             when others =>
                 res <= ZERO_CONST;
         end case;
