@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.43
+--! \version 0.0.47
 --! 
 --! \date 2020/11/22
 --! 
@@ -66,7 +66,8 @@ architecture behavior of Core is
             wb_do_reg_write     : in std_logic;                                 --! .
             hazard_id_ex_en     : out std_logic;                                --! ID/EX enable.
             hazard_fe_en        : out std_logic;                                --! PC enable.
-            hazard_ex_mem_clear : out std_logic                                 --! EX/MEM clear.
+            hazard_ex_mem_clear : out std_logic;                                --! EX/MEM clear.
+            hazard_id_ex_clear  : out std_logic                                 --! ID/EX clear.
             );
     end component;
 
@@ -484,6 +485,7 @@ architecture behavior of Core is
     signal wr_reg_idx_mem_sig       : std_logic_vector(RF_ADR_WIDTH-1 downto 0)         := (others => '0');
     signal reg_do_write_mem_sig     : std_logic                                         := '0';
     signal hazard_ex_mem_clear_sig  : std_logic                                         := '0';
+    signal hazard_id_ex_clear_sig   : std_logic                                         := '0';
 
     -- MEM signals
     signal alures_mem_sig           : std_logic_vector(DATA_WIDTH-1 downto 0)           := (others => '0');
@@ -565,7 +567,7 @@ begin
                         port map(
                             clk                 => clk_sig,
                             rst                 => rst_sig,
-                            en                  => '1',
+                            en                  => hazard_fe_en_sig,
                             pc4_in              => pc_adderres_sig,
                             pc_in               => pc_sig,
                             instr_in            => instr_sig,
@@ -640,7 +642,7 @@ begin
                             )
                         port map(
                             clk                 => clk_sig,
-                            rst                 => rst_sig,
+                            rst                 => hazard_id_ex_clear_sig,
                             en                  => hazard_id_ex_en_sig,
                             reg_do_write_in     => reg_do_write_ctrl_sig,
                             reg_wr_src_ctrl_in  => reg_wr_src_ctrl_sig,
@@ -770,7 +772,8 @@ begin
                             wb_do_reg_write     => reg_do_write_wb_sig,
                             hazard_id_ex_en     => hazard_id_ex_en_sig,
                             hazard_fe_en        => hazard_fe_en_sig,
-                            hazard_ex_mem_clear => hazard_ex_mem_clear_sig
+                            hazard_ex_mem_clear => hazard_ex_mem_clear_sig,
+                            hazard_id_ex_clear  => hazard_id_ex_clear_sig
                             );
 
     brch : Branch       generic map(

@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.37
+--! \version 0.0.47
 --! 
 --! \date 2020/12/06
 --!
@@ -53,7 +53,8 @@ entity HazardDetection is
         wb_do_reg_write     : in std_logic;                                 --! .
         hazard_id_ex_en     : out std_logic;                                --! ID/EX enable.
         hazard_fe_en        : out std_logic;                                --! PC enable.
-        hazard_ex_mem_clear : out std_logic                                 --! EX/MEM clear.
+        hazard_ex_mem_clear : out std_logic;                                --! EX/MEM clear.
+        hazard_id_ex_clear  : out std_logic                                 --! ID/EX clear.
         );
 end HazardDetection;
 
@@ -67,7 +68,7 @@ begin
 
     hazard_sig <= ecall_hazard_sig or load_use_hazard_sig;
 
-    process(ex_reg_wr_idx, id_reg1_idx, id_reg2_idx, ex_do_mem_read_en)
+    process(ex_reg_wr_idx, id_reg1_idx, id_reg2_idx, ex_do_mem_read_en) is
     begin
         if (((ex_reg_wr_idx = id_reg1_idx) or (ex_reg_wr_idx = id_reg2_idx)) and (ex_do_mem_read_en = '1')) then
             load_use_hazard_sig <= '1';
@@ -76,7 +77,7 @@ begin
         end if;
     end process;
 
-    process(instr_id, mem_do_reg_write, wb_do_reg_write)
+    process(instr_id, mem_do_reg_write, wb_do_reg_write) is
     begin
         if ((instr_id = RISCV_INSTR_ECALL) and ((mem_do_reg_write = '1') or (wb_do_reg_write = '1'))) then
             ecall_hazard_sig <= '1';
@@ -88,5 +89,6 @@ begin
     hazard_fe_en <= not hazard_sig;
     hazard_id_ex_en <= not ecall_hazard_sig;
     hazard_ex_mem_clear <= not ecall_hazard_sig;
+    hazard_id_ex_clear <= not load_use_hazard_sig;
 
 end behavior;
