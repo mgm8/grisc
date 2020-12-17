@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.47
+--! \version 0.0.48
 --! 
 --! \date 2020/11/22
 --! 
@@ -67,7 +67,8 @@ architecture behavior of Core is
             hazard_id_ex_en     : out std_logic;                                --! ID/EX enable.
             hazard_fe_en        : out std_logic;                                --! PC enable.
             hazard_ex_mem_clear : out std_logic;                                --! EX/MEM clear.
-            hazard_id_ex_clear  : out std_logic                                 --! ID/EX clear.
+            hazard_id_ex_clear  : out std_logic;                                --! ID/EX clear.
+            stall_ecall_hdl     : out std_logic                                 --! Stall ecall handling.
             );
     end component;
 
@@ -420,6 +421,8 @@ architecture behavior of Core is
     -- General signals
     signal clk_sig                  : std_logic                                         := '0';
     signal rst_sig                  : std_logic                                         := '0';
+    signal efsc_sig                 : std_logic                                         := '0';
+    signal efschz_sig               : std_logic                                         := '0';
 
     -- IF signals
     signal pc_adderres_sig          : std_logic_vector(MEM_ADR_WIDTH-1 downto 0)        := (others => '0');
@@ -512,6 +515,10 @@ begin
 
     pc_sel_sig <= (do_br_ex_sig and branch_taken_sig) or do_jump_ex_sig;
 
+--    efsc_sig <= pc_sel_sig or syscall_exit_sig;
+    efsc_sig <= pc_sel_sig or '0';
+    efschz_sig <= efsc_sig or hazard_id_ex_clear_sig;
+
     -- ##########################################################################
     -- ##########################################################################
     -- == IF Stage ==============================================================
@@ -566,7 +573,7 @@ begin
                             )
                         port map(
                             clk                 => clk_sig,
-                            rst                 => rst_sig,
+                            rst                 => not efsc_sig,
                             en                  => hazard_fe_en_sig,
                             pc4_in              => pc_adderres_sig,
                             pc_in               => pc_sig,
@@ -642,7 +649,7 @@ begin
                             )
                         port map(
                             clk                 => clk_sig,
-                            rst                 => hazard_id_ex_clear_sig,
+                            rst                 => not efschz_sig,
                             en                  => hazard_id_ex_en_sig,
                             reg_do_write_in     => reg_do_write_ctrl_sig,
                             reg_wr_src_ctrl_in  => reg_wr_src_ctrl_sig,
@@ -793,7 +800,7 @@ begin
                             )
                         port map(
                             clk                 => clk_sig,
-                            rst                 => hazard_ex_mem_clear_sig,
+                            rst                 => not hazard_ex_mem_clear_sig,
                             en                  => '1',
                             reg_do_write_in     => reg_do_write_ex_sig,
                             reg_wr_src_ctrl_in  => reg_wr_src_ctrl_ex_sig,

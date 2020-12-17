@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.47
+--! \version 0.0.48
 --! 
 --! \date 2020/12/06
 --!
@@ -54,7 +54,8 @@ entity HazardDetection is
         hazard_id_ex_en     : out std_logic;                                --! ID/EX enable.
         hazard_fe_en        : out std_logic;                                --! PC enable.
         hazard_ex_mem_clear : out std_logic;                                --! EX/MEM clear.
-        hazard_id_ex_clear  : out std_logic                                 --! ID/EX clear.
+        hazard_id_ex_clear  : out std_logic;                                --! ID/EX clear.
+        stall_ecall_hdl     : out std_logic                                 --! Stall ecall handling.
         );
 end HazardDetection;
 
@@ -88,7 +89,8 @@ begin
 
     hazard_fe_en <= not hazard_sig;
     hazard_id_ex_en <= not ecall_hazard_sig;
-    hazard_ex_mem_clear <= not ecall_hazard_sig;
-    hazard_id_ex_clear <= not load_use_hazard_sig;
+    hazard_ex_mem_clear <= ecall_hazard_sig;
+    hazard_id_ex_clear <= load_use_hazard_sig;
+    stall_ecall_hdl <= ecall_hazard_sig;
 
 end behavior;
