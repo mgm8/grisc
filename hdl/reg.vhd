@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.31
+--! \version 0.0.46
 --! 
 --! \date 2020/11/21
 --! 
@@ -55,11 +55,13 @@ begin
 
     process(clk)
     begin
-        if rst = '0' then
-            output_sig <= (others => '0');
-        elsif rising_edge(clk) then
-            if en = '1' then
-                output_sig <= input;
+        if rising_edge(clk) then
+            if rst = '0' then
+                output_sig <= (others => '0');
+            else
+                if en = '1' then
+                    output_sig <= input;
+                end if;
             end if;
         end if;
     end process;
