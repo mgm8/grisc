@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.43
+--! \version 0.0.49
 --! 
 --! \date 2020/11/22
 --! 
@@ -93,15 +93,13 @@ architecture behavior of RegFile is
 
 begin
 
-    process(clk)
+    process(wr_en, wr_idx, wr_data) is
     begin
-        if rising_edge(clk) then
             if wr_en = '1' then
                 if to_integer(unsigned(wr_idx)) /= 0 then   -- 0 = x0 = The constant zero register
                     reg_bank(to_integer(unsigned(wr_idx))) <= wr_data;
                 end if;
             end if;
-        end if;
     end process;
 
     reg1 <= reg_bank(to_integer(unsigned(r1_idx)));
