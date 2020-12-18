@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.45
 --! 
 --! \date 2020/11/22
 --! 
@@ -34,54 +34,100 @@
 library ieee;
     use ieee.std_logic_1164.all;
     use ieee.std_logic_unsigned.all;
+    use ieee.numeric_std.all;
+
+library work;
+    use work.grisc.all;
 
 entity ALU is
     generic(
-        DATA_WIDTH  : natural := 32                                 --! Data width in bits.
+        DATA_WIDTH : natural := 32                              --! Data width in bits.
     );
     port(
-        clk         : in  std_logic;                                --! Clock input.
-        op1         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
-        op2         : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
-        operation   : in  std_logic_vector(3 downto 0);             --! Operation code.
-        result      : out std_logic_vector(DATA_WIDTH-1 downto 0);  --! Opeartion output.
-        zero        : out std_logic                                 --! Zero result flag.
+        ctrl    : in  std_logic_vector(4 downto 0);             --! Operation control.
+        op1     : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 1.
+        op2     : in  std_logic_vector(DATA_WIDTH-1 downto 0);  --! Operand 2.
+        res     : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Operation output.
     );
 end ALU;
 
 architecture behavior of ALU is
 
-    constant ALU_OP_ID_AND : std_logic_vector(operation'range) := "0000";   --! AND operation.
-    constant ALU_OP_ID_OR  : std_logic_vector(operation'range) := "0001";   --! OR operation.
-    constant ALU_OP_ID_ADD : std_logic_vector(operation'range) := "0010";   --! ADD operation.
-    constant ALU_OP_ID_XOR : std_logic_vector(operation'range) := "0011";   --! XOR operation.
-    constant ALU_OP_ID_SUB : std_logic_vector(operation'range) := "0110";   --! SUB operation.
-
-    signal result_sig : std_logic_vector(result'range) := (others => '0');
+    constant ZERO_CONST : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+    constant ONE_CONST  : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '1');
 
 begin
 
-    result <= result_sig;
-    zero <= not (result_sig(31) or result_sig(30) or result_sig(29) or result_sig(28) or result_sig(27) or
-                 result_sig(26) or result_sig(25) or result_sig(24) or result_sig(23) or result_sig(22) or
-                 result_sig(21) or result_sig(20) or result_sig(19) or result_sig(18) or result_sig(17) or
-                 result_sig(16) or result_sig(15) or result_sig(14) or result_sig(13) or result_sig(12) or
-                 result_sig(11) or result_sig(10) or result_sig(9)  or result_sig(8)  or result_sig(7) or
-                 result_sig(6)  or result_sig(5)  or result_sig(4)  or result_sig(3)  or result_sig(2) or
-                 result_sig(1)  or result_sig(0));
-
-    process(clk)
+    process(ctrl, op1, op2)
     begin
-        if rising_edge(clk) then
-            case operation is
-                when ALU_OP_ID_AND => result_sig <= op1 and op2;
-                when ALU_OP_ID_OR  => result_sig <= op1 or op2;
-                when ALU_OP_ID_ADD => result_sig <= op1 + op2;
-                when ALU_OP_ID_XOR => result_sig <= op1 xor op2;
-                when ALU_OP_ID_SUB => result_sig <= op1 - op2;
-                when others => result_sig <= (others => '0');
-            end case;
-        end if;
+        case ctrl is
+            when GRISC_ALU_OP_NOP =>
+                res <= ZERO_CONST;
+            when GRISC_ALU_OP_ADD =>
+                res <= op1 + op2;
+            when GRISC_ALU_OP_SUB =>
+                res <= op1 - op2;
+            when GRISC_ALU_OP_MUL =>
+                res <= std_logic_vector(to_signed(to_integer(signed(op1) * signed(op2)), DATA_WIDTH));
+            when GRISC_ALU_OP_DIV =>
+                if op2 = ZERO_CONST then
+                    res <= ONE_CONST;
+                else
+                    res <= std_logic_vector(to_signed(to_integer(signed(op1) / signed(op2)), DATA_WIDTH));
+                end if;
+            when GRISC_ALU_OP_AND =>
+                res <= op1 and op2;
+            when GRISC_ALU_OP_OR =>
+                res <= op1 or op2;
+            when GRISC_ALU_OP_XOR =>
+                res <= op1 xor op2;
+            when GRISC_ALU_OP_SL =>
+                res <= std_logic_vector(shift_left(unsigned(op1), to_integer(unsigned(op2))));
+            when GRISC_ALU_OP_SRA =>
+                res <= std_logic_vector(shift_right(unsigned(op1), to_integer(unsigned(op2))));
+            when GRISC_ALU_OP_SRL =>
+                res <= std_logic_vector(shift_right(unsigned(op1), to_integer(unsigned(op2))));
+            when GRISC_ALU_OP_LUI =>
+                res <= op2;
+            when GRISC_ALU_OP_LT =>
+                if op1 < op2 then
+                    res <= x"00000001";
+                else
+                    res <= ZERO_CONST;
+                end if;
+            when GRISC_ALU_OP_LTU =>
+                if op1 < op2 then
+                    res <= x"00000001";
+                else
+                    res <= ZERO_CONST;
+                end if;
+            when GRISC_ALU_OP_MULH =>
+                res <= op1 * op2;
+            when GRISC_ALU_OP_MULHU =>
+                res <= op1 * op2;
+            when GRISC_ALU_OP_MULHSU=>
+                res <= op1 * op2;
+            when GRISC_ALU_OP_DIVU =>
+                if op2 = ZERO_CONST then
+                    res <= ONE_CONST;
+                else
+                    res <= std_logic_vector(to_unsigned(to_integer(signed(op1) / signed(op2)), DATA_WIDTH));
+                end if;
+            when GRISC_ALU_OP_REM =>
+                if op2 = ZERO_CONST then
+                    res <= op1;
+                else
+                    res <= std_logic_vector(to_signed(to_integer(signed(op1) rem signed(op2)), DATA_WIDTH));
+                end if;
+            when GRISC_ALU_OP_REMU =>
+                if op2 = ZERO_CONST then
+                    res <= op1;
+                else
+                    res <= std_logic_vector(to_unsigned(to_integer(signed(op1) rem signed(op2)), DATA_WIDTH));
+                end if;
+            when others =>
+                res <= ZERO_CONST;
+        end case;
     end process;
 
 end behavior;

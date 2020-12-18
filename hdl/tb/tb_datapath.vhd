@@ -25,7 +25,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.16
+--! \version 0.0.31
 --! 
 --! \date 2020/11/23
 --! 
@@ -51,6 +51,7 @@ architecture behavior of TB_Datapath is
         port(
             clk         : in std_logic;                                 --! Clock input.
             rst         : in std_logic;                                 --! Reset signal.
+            en          : in std_logic;                                 --! Enable signal.
             input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
             output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
             );
@@ -211,6 +212,7 @@ begin
                         port map(
                             clk             => clk_sig,
                             rst             => '1',
+                            en              => '1',
                             input           => pc_new_adr_sig,
                             output          => pc_adr_sig
                             );

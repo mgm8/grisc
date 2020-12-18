@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.49
 --! 
 --! \date 2020/11/21
 --! 
@@ -44,7 +44,7 @@ entity RAM is
     port(
         clk         : in std_logic;                                 --! Clock input.
         wr_en       : in std_logic;                                 --! Write enable.
-        rd_en       : in std_logic;                                 --! Read enable.
+        op          : in std_logic_vector(3 downto 0);              --! Memory operation.
         adr         : in std_logic_vector(ADR_WIDTH-1 downto 0);    --! Memory address to access.
         data_in     : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
         data_out    : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
@@ -55,20 +55,25 @@ architecture behavior of RAM is
 
     type ram_type is array (0 to SIZE-1) of std_logic_vector(data_in'range);
 
-    signal ram_mem : ram_type := (others => (others => '1'));
+    signal ram_mem : ram_type := (others => (others => '0'));
 
 begin
 
-    process(clk) is
+    process(wr_en, adr) is
     begin
-        if rising_edge(clk) then
             if wr_en = '1' then
-                ram_mem(to_integer(unsigned(adr))) <= data_in;
+                if adr < std_logic_vector(to_unsigned(SIZE, adr'length)) then
+                    ram_mem(to_integer(unsigned(adr))) <= data_in;
+                end if;
             end if;
+    end process;
 
-            if rd_en = '1' then
-                data_out <= ram_mem(to_integer(unsigned(adr)));
-            end if;
+    process(adr)
+    begin
+        if adr > std_logic_vector(to_unsigned(SIZE, adr'length)) then
+            data_out <= (others => '0');
+        else
+            data_out <= ram_mem(to_integer(unsigned(adr)));
         end if;
     end process;
 

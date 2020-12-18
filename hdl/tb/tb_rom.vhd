@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.25
 --! 
 --! \date 2020/11/21
 --! 
@@ -93,7 +93,7 @@ begin
             report "Address 0x00000000 = 0x" & to_hstring(data_out_sig);
         end if;
 
-        adr_sig <= x"00000001";
+        adr_sig <= x"00000004";
         wait for 40 ns;
 
         if data_out_sig /= x"0000F004" then
@@ -102,7 +102,7 @@ begin
             report "Address 0x00000001 = 0x" & to_hstring(data_out_sig);
         end if;
 
-        adr_sig <= x"00000002";
+        adr_sig <= x"00000008";
         wait for 40 ns;
 
         if data_out_sig /= x"00000B56" then
@@ -111,7 +111,7 @@ begin
             report "Address 0x00000002 = 0x" & to_hstring(data_out_sig);
         end if;
 
-        adr_sig <= x"00000003";
+        adr_sig <= x"0000000C";
         wait for 40 ns;
 
         if data_out_sig /= x"023AC004" then

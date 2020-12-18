@@ -28,7 +28,7 @@
 --!
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.40
 --! 
 --! \date 2020/11/22
 --! 
@@ -43,7 +43,7 @@ library ieee;
 entity ROM is
     generic(
         DATA_WIDTH  : natural := 32;                                --! Data width in bits.
-        ADR_WIDTH   : natural := 64;                                --! Address width in bits.
+        ADR_WIDTH   : natural := 32;                                --! Address width in bits.
         SIZE        : natural := 1024;                              --! Memory size in bytes.
         MEM_FILE    : string := "rom.hex"                           --! File name of the memory file.
         );
@@ -73,7 +73,7 @@ begin
                 readline(load_file, hex_file_line);
                 hread(hex_file_line, data);
                 rom_mem(index) <= data;
-                index := index + 1;
+                index := index + 4;
             end loop;
         end if;
 		
