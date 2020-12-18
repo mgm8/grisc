@@ -1,5 +1,5 @@
 --
--- reg.vhd
+-- reg1b.vhd
 --
 -- Copyright (C) 2020, Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --
@@ -22,34 +22,31 @@
 --
 
 --! 
---! \brief Flip-flop register.
+--! \brief Flip-flop register (1-bit).
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
 --! \version 0.0.46
 --! 
---! \date 2020/11/21
+--! \date 2020/12/14
 --! 
 
 library ieee;
     use ieee.std_logic_1164.all;
 
-entity Reg is
-    generic(
-        DATA_WIDTH  : natural := 32                                 --! Data width in bits.
-        );
+entity Reg1b is
     port(
-        clk         : in std_logic;                                 --! Clock input.
-        rst         : in std_logic;                                 --! Reset signal.
-        en          : in std_logic;                                 --! Enable signal.
-        input       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Data input.
-        output      : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Data output.
+        clk         : in std_logic;     --! Clock input.
+        rst         : in std_logic;     --! Reset signal.
+        en          : in std_logic;     --! Enable signal.
+        input       : in std_logic;     --! Data input.
+        output      : out std_logic     --! Data output.
         );
-end Reg;
+end Reg1b;
 
-architecture behavior of Reg is
+architecture behavior of Reg1b is
 
-    signal output_sig : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+    signal output_sig : std_logic := '0';
 
 begin
 
@@ -57,7 +54,7 @@ begin
     begin
         if rising_edge(clk) then
             if rst = '0' then
-                output_sig <= (others => '0');
+                output_sig <= '0';
             else
                 if en = '1' then
                     output_sig <= input;

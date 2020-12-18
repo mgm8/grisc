@@ -26,7 +26,7 @@
 --! 
 --! \author Gabriel Mariano Marcelino <gabriel.mm8@gmail.com>
 --! 
---! \version 0.0.15
+--! \version 0.0.42
 --! 
 --! \date 2020/11/23
 --!
@@ -35,36 +35,182 @@ library ieee;
     use ieee.std_logic_1164.all;
     use ieee.std_logic_unsigned.all;
 
+library work;
+    use work.grisc.all;
+
 entity ImmGen is
     generic(
         DATA_WIDTH : natural := 32                                  --! Data width in bits.
         );
     port(
-        inst    : in std_logic_vector(DATA_WIDTH-1 downto 0);       --! Instruction.
-        imm     : out std_logic_vector((2*DATA_WIDTH)-1 downto 0)   --! Generated immediate.
+        instr       : in std_logic_vector(DATA_WIDTH-1 downto 0);   --! Instruction.
+        instr_id    : in std_logic_vector(5 downto 0);              --! Instruction ID.
+        imm         : out std_logic_vector(DATA_WIDTH-1 downto 0)   --! Generated immediate.
         );
 end ImmGen;
 
 architecture behavior of ImmGen is
 
+    constant ZERO_CONST : std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+
 begin
 
-    process(inst)
+    process(instr, instr_id)
     begin
-        if (inst(6) = '0' and inst(5) = '0') then       -- Load instructions
-            imm(11 downto 0) <= inst(31 downto 20);
-        elsif (inst(6) = '0' and inst(5) = '1') then    -- Store instructions
-            imm(11 downto 0) <= inst(31 downto 25) & inst(11 downto 7);
-        elsif (inst(6) = '1' and inst(5) = '0') then    -- Conditional branches
-            imm(11 downto 0) <= inst(31) & inst(7) & inst(30 downto 25) & inst(11 downto 8);
-        else
-            imm(11 downto 0) <= inst(31) & inst(7) & inst(30 downto 25) & inst(11 downto 8);
-        end if;
+        case instr_id is
+            when RISCV_INSTR_NOP =>
+                imm <= ZERO_CONST;
+            when RISCV_INSTR_LUI =>
+                imm <= instr and x"FFFFF000";
+            when RISCV_INSTR_AUIPC =>
+                imm <= instr and x"FFFFF000";
+            when RISCV_INSTR_JAL =>
+                imm(20 downto 0) <= instr(31) & instr(19 downto 12) & instr(20) & instr(30 downto 21) & '0';
+                -- Sign-extension
+                for i in 21 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_JALR =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_BEQ =>
+                imm(11 downto 0) <= instr(31) & instr(7) & instr(30 downto 25) & instr(11 downto 8);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_BNE =>
+                imm(11 downto 0) <= instr(31) & instr(7) & instr(30 downto 25) & instr(11 downto 8);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_BLT =>
+                imm(11 downto 0) <= instr(31) & instr(7) & instr(30 downto 25) & instr(11 downto 8);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_BGE =>
+                imm(11 downto 0) <= instr(31) & instr(7) & instr(30 downto 25) & instr(11 downto 8);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_BLTU =>
+                imm(11 downto 0) <= instr(31) & instr(7) & instr(30 downto 25) & instr(11 downto 8);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_BGEU =>
+                imm(11 downto 0) <= instr(31) & instr(7) & instr(30 downto 25) & instr(11 downto 8);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_LB =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_LH =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_LW =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_LBU =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SB =>
+                imm(11 downto 0) <= instr(31 downto 25) & instr(11 downto 7);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SH =>
+                imm(11 downto 0) <= instr(31 downto 25) & instr(11 downto 7);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SW =>
+                imm(11 downto 0) <= instr(31 downto 25) & instr(11 downto 7);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_ADDI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SLTI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SLTIU =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_XORI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_ORI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_ANDI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SLLI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SRLI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when RISCV_INSTR_SRAI =>
+                imm(11 downto 0) <= instr(31 downto 20);
+                -- Sign-extension
+                for i in 12 to DATA_WIDTH-1 loop
+                    imm(i) <= instr(31);
+                end loop;
+            when others =>
+                imm <= ZERO_CONST;
+        end case;
     end process;
-
-    -- Sign-extension
-    gen : for i in 12 to 63 generate
-        imm(i) <= inst(31);
-    end generate;
 
 end behavior;
