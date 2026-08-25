@@ -1,0 +1,173 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction &mdash; GRISC Documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=4c0d86c8"></script>
+      <script src="_static/doctools.js?v=888ff710"></script>
+      <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Implementation" href="implementation.html" />
+    <link rel="prev" title="GRISC" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            grisc
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#supported-isa">Supported ISA</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#load-upper-immediate-and-jumps">Load upper immediate and jumps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#branches">Branches</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#loads-and-stores">Loads and stores</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#register-immediate-operations">Register-immediate operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#register-register-operations">Register-register operations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#multiplication-and-division-extension">Multiplication and division extension</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="implementation.html">Implementation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="verification.html">Simulation and verification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="glossary.html">Glossary</a></li>
+<li class="toctree-l1"><a class="reference internal" href="references.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">grisc</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/introduction.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction">
+<h1>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h1>
+<p>GRISC is a reduced RISC-V processor implementation written in synthesizable VHDL. The design follows a five-stage pipeline—instruction fetch (IF), instruction decode (ID), execute (EX), memory access (MEM), and write-back (WB)—and handles both data and control hazards. Its datapath is based on the five-stage implementation provided by the Ripes simulator <span id="id1">[<a class="reference internal" href="references.html#id6" title="Morten Borup Petersen. Ripes. 2020. Accessed 2020-11-16. URL: https://github.com/mortbopet/Ripes.">4</a>]</span> and on the reference pipeline described by Patterson and Hennessy <span id="id2">[<a class="reference internal" href="references.html#id5" title="David A. Patterson and John L. Hennessy. Computer Organization and Design: The Hardware/Software Interface: RISC-V Edition. Morgan Kaufmann, 1 edition, 2017.">3</a>]</span>.</p>
+<p>The project was developed with three goals: implement the processor hardware, validate individual blocks and the complete datapath with testbenches, and run Assembly programs that exercise the ISA and pipeline-hazard behavior. The complete original assignment specification is available online <span id="id3">[<a class="reference internal" href="references.html#id8" title="Eduardo Augusto Bezerra. Final project: design and implementation in vhdl for fpgas of a multi-cycle risc-v based architecture. 2020. Accessed 2020-11-16. URL: http://gse.ufsc.br/bezerra/?page_id=2430.">1</a>]</span>.</p>
+<section id="supported-isa">
+<h2>Supported ISA<a class="headerlink" href="#supported-isa" title="Permalink to this heading"></a></h2>
+<p>GRISC implements RV32I plus the RISC-V <code class="docutils literal notranslate"><span class="pre">M</span></code> extension (RV32IM). The minimum instruction set is grouped below by instruction class.</p>
+<section id="load-upper-immediate-and-jumps">
+<h3>Load upper immediate and jumps<a class="headerlink" href="#load-upper-immediate-and-jumps" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lui</span> <span class="pre">rd,</span> <span class="pre">imm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jal</span> <span class="pre">rd,</span> <span class="pre">offset</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">jalr</span> <span class="pre">rd,</span> <span class="pre">rs1,</span> <span class="pre">offset</span></code></p></li>
+</ul>
+</section>
+<section id="branches">
+<h3>Branches<a class="headerlink" href="#branches" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">beq</span> <span class="pre">rs1,</span> <span class="pre">rs2,</span> <span class="pre">offset</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bne</span> <span class="pre">rs1,</span> <span class="pre">rs2,</span> <span class="pre">offset</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">blt</span> <span class="pre">rs1,</span> <span class="pre">rs2,</span> <span class="pre">offset</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">bge</span> <span class="pre">rs1,</span> <span class="pre">rs2,</span> <span class="pre">offset</span></code></p></li>
+</ul>
+</section>
+<section id="loads-and-stores">
+<h3>Loads and stores<a class="headerlink" href="#loads-and-stores" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">lb</span> <span class="pre">rd,</span> <span class="pre">offset(rs1)</span></code> and <code class="docutils literal notranslate"><span class="pre">lw</span> <span class="pre">rd,</span> <span class="pre">offset(rs1)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sb</span> <span class="pre">rs2,</span> <span class="pre">offset(rs1)</span></code> and <code class="docutils literal notranslate"><span class="pre">sw</span> <span class="pre">rs2,</span> <span class="pre">offset(rs1)</span></code></p></li>
+</ul>
+</section>
+<section id="register-immediate-operations">
+<h3>Register-immediate operations<a class="headerlink" href="#register-immediate-operations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">addi</span> <span class="pre">rd,</span> <span class="pre">rs1,</span> <span class="pre">imm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">andi</span> <span class="pre">rd,</span> <span class="pre">rs1,</span> <span class="pre">imm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">xori</span> <span class="pre">rd,</span> <span class="pre">rs1,</span> <span class="pre">imm</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ori</span> <span class="pre">rd,</span> <span class="pre">rs1,</span> <span class="pre">imm</span></code></p></li>
+</ul>
+</section>
+<section id="register-register-operations">
+<h3>Register-register operations<a class="headerlink" href="#register-register-operations" title="Permalink to this heading"></a></h3>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">add</span></code>, <code class="docutils literal notranslate"><span class="pre">sub</span></code>, <code class="docutils literal notranslate"><span class="pre">and</span></code>, <code class="docutils literal notranslate"><span class="pre">xor</span></code>, and <code class="docutils literal notranslate"><span class="pre">or</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sll</span></code>, <code class="docutils literal notranslate"><span class="pre">srl</span></code>, and <code class="docutils literal notranslate"><span class="pre">slt</span></code></p></li>
+</ul>
+</section>
+<section id="multiplication-and-division-extension">
+<h3>Multiplication and division extension<a class="headerlink" href="#multiplication-and-division-extension" title="Permalink to this heading"></a></h3>
+<p>The additional <code class="docutils literal notranslate"><span class="pre">M</span></code> extension instructions are <code class="docutils literal notranslate"><span class="pre">mul</span></code>, <code class="docutils literal notranslate"><span class="pre">mulh</span></code>, <code class="docutils literal notranslate"><span class="pre">mulhu</span></code>, <code class="docutils literal notranslate"><span class="pre">mulhsu</span></code>, <code class="docutils literal notranslate"><span class="pre">div</span></code>, <code class="docutils literal notranslate"><span class="pre">divu</span></code>, <code class="docutils literal notranslate"><span class="pre">rem</span></code>, and <code class="docutils literal notranslate"><span class="pre">remu</span></code>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="GRISC" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="implementation.html" class="btn btn-neutral float-right" title="Implementation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright The GRISC Contributors.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

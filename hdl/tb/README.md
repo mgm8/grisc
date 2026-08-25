@@ -1,5 +1,0 @@
-# Testbenches
-
-## Dependencies
-
-* ghdl
