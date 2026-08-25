@@ -14,14 +14,13 @@ GRISC
 
 Welcome to the official documentation of the GRISC processor.
 
-.. note::
-    TODO
-
+GRISC is a five-stage, 32-bit RISC-V processor described in synthesizable VHDL. It implements the RV32I base integer ISA together with the RV32M integer multiplication and division extension. The pipeline includes forwarding and data-hazard detection.
 
 .. toctree::
    :maxdepth: 3
-   :caption: Documentation
 
    introduction
+   implementation
+   verification
    glossary
    references
