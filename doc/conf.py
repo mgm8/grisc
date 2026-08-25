@@ -25,7 +25,7 @@ doc_id      = 'grisc'
 # General configuration
 numfig = True
 
-extensions = ['sphinxcontrib.bibtex', 'sphinx_subfigure']
+extensions = ['sphinxcontrib.bibtex']
 
 # Path to your .bib file
 bibtex_bibfiles = ['references.bib']
